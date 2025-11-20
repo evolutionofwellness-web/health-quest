@@ -9,9 +9,71 @@ let currentView = 'home';
 let selectedZone = null;
 let currentQuestion = null;
 
+// Game progress state with localStorage
+let gameState = {
+    totalXP: 0,
+    answeredQuestions: [] // Array of question ids
+};
+
+// Load game state from localStorage
+function loadGameState() {
+    const savedState = localStorage.getItem('healthQuestState');
+    if (savedState) {
+        try {
+            gameState = JSON.parse(savedState);
+            console.log('Game state loaded:', gameState);
+        } catch (e) {
+            console.error('Error loading game state:', e);
+            gameState = { totalXP: 0, answeredQuestions: [] };
+        }
+    }
+}
+
+// Save game state to localStorage
+function saveGameState() {
+    try {
+        localStorage.setItem('healthQuestState', JSON.stringify(gameState));
+        console.log('Game state saved:', gameState);
+    } catch (e) {
+        console.error('Error saving game state:', e);
+    }
+}
+
+// Load state on app initialization
+loadGameState();
+
 // Get all zone cards
 const zoneCards = document.querySelectorAll('.zone-card');
 const homeView = document.querySelector('.home-view');
+
+// Function to update progress display on the home screen
+function updateProgressDisplay() {
+    // Update total XP display
+    const xpElement = document.getElementById('total-xp');
+    if (xpElement) {
+        xpElement.textContent = gameState.totalXP;
+    }
+
+    // Update each zone card with completion count
+    zoneCards.forEach(card => {
+        const zoneName = card.dataset.zone;
+        const capitalizedZoneName = zoneName.charAt(0).toUpperCase() + zoneName.slice(1);
+
+        // Filter questions by zone
+        const zoneQuestions = QUESTIONS.filter(q => q.zone === capitalizedZoneName);
+        const completedCount = zoneQuestions.filter(q => gameState.answeredQuestions.includes(q.id)).length;
+        const totalCount = zoneQuestions.length;
+
+        // Update progress text
+        const progressElement = card.querySelector('.zone-progress');
+        if (progressElement) {
+            progressElement.textContent = `${completedCount} / ${totalCount} tiles completed`;
+        }
+    });
+}
+
+// Initialize progress display on load
+updateProgressDisplay();
 
 // Add click event listeners to zone cards
 zoneCards.forEach(card => {
@@ -188,7 +250,19 @@ function handleAnswerSelection(selectedIndex) {
     const isCorrect = selectedIndex === currentQuestion.correctIndex;
 
     if (isCorrect) {
-        alert(`Correct! ✓\n\n${currentQuestion.explanation}`);
+        // Award XP only if this question hasn't been answered before
+        if (!gameState.answeredQuestions.includes(currentQuestion.id)) {
+            gameState.totalXP += currentQuestion.xpReward;
+            gameState.answeredQuestions.push(currentQuestion.id);
+            saveGameState();
+
+            alert(`Correct! +${currentQuestion.xpReward} XP\n\n${currentQuestion.explanation}\n\nTotal XP: ${gameState.totalXP}`);
+
+            // Update UI to reflect new progress
+            updateProgressDisplay();
+        } else {
+            alert(`Correct! (Already completed)\n\n${currentQuestion.explanation}`);
+        }
     } else {
         alert(`Incorrect. ✗\n\nThe correct answer was: "${currentQuestion.choices[currentQuestion.correctIndex]}"\n\n${currentQuestion.explanation}`);
     }
