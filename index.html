@@ -114,6 +114,23 @@
             Clear earlier stops to unlock this area.
         </div>
 
+        <!-- Achievements Section -->
+        <div class="achievements-section">
+            <div class="achievements-header" id="achievements-toggle">
+                <h2 class="achievements-title">Achievements <span class="achievements-count" id="achievements-count">0 / 4</span></h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="achievements-content collapsed" id="achievements-content">
+                <div class="achievements-list" id="achievements-list"></div>
+            </div>
+        </div>
+
+        <!-- Weekly Boss Button -->
+        <button id="weekly-boss-button" class="weekly-boss-button" style="display: none;">
+            <span class="boss-icon">⚔️</span>
+            <span class="boss-text">Weekly Challenge</span>
+        </button>
+
         <div class="zone-grid">
             <div class="zone-card" data-zone="sleep">
                 <div class="zone-icon">🌙</div>
@@ -227,6 +244,19 @@
             <div id="modal-options"></div>
             <p id="modal-feedback" class="modal-feedback"></p>
             <button id="modal-close-btn">Close</button>
+        </div>
+    </div>
+
+    <!-- Weekly Boss Modal -->
+    <div id="weekly-boss-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="boss-modal-content">
+            <div class="boss-modal-content-inner">
+                <div class="boss-progress" id="boss-progress">Question 1 of 5</div>
+                <h3 id="boss-question-text"></h3>
+                <div id="boss-options"></div>
+                <p id="boss-feedback" class="boss-feedback"></p>
+            </div>
         </div>
     </div>
 
