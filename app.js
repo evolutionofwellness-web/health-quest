@@ -11,7 +11,9 @@ const STORAGE_KEYS = {
     lastPlayDate: 'hq_lastPlayDate',
     streak: 'hq_streak',
     hasSeenOnboarding: 'hasSeenOnboarding',
-    todayHistory: 'hq_todayHistory'
+    todayHistory: 'hq_todayHistory',
+    currentNodeIndex: 'hq_currentNodeIndex',
+    completedNodes: 'hq_completedNodes'
 };
 
 let gameState = {
@@ -19,7 +21,9 @@ let gameState = {
     completedQuestions: [],
     lastPlayDate: null,
     streak: 0,
-    currentLevel: 1
+    currentLevel: 1,
+    currentNodeIndex: 0,
+    completedNodes: []
 };
 
 // Track today's progress
@@ -39,6 +43,8 @@ function loadGameState() {
     gameState.completedQuestions = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedQuestions) || '[]');
     gameState.lastPlayDate = localStorage.getItem(STORAGE_KEYS.lastPlayDate) || null;
     gameState.streak = parseInt(localStorage.getItem(STORAGE_KEYS.streak)) || 0;
+    gameState.currentNodeIndex = parseInt(localStorage.getItem(STORAGE_KEYS.currentNodeIndex)) || 0;
+    gameState.completedNodes = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedNodes) || '[]');
 
     // Calculate current level
     gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
@@ -55,6 +61,8 @@ function saveGameState() {
     localStorage.setItem(STORAGE_KEYS.completedQuestions, JSON.stringify(gameState.completedQuestions));
     localStorage.setItem(STORAGE_KEYS.lastPlayDate, gameState.lastPlayDate || '');
     localStorage.setItem(STORAGE_KEYS.streak, gameState.streak.toString());
+    localStorage.setItem(STORAGE_KEYS.currentNodeIndex, gameState.currentNodeIndex.toString());
+    localStorage.setItem(STORAGE_KEYS.completedNodes, JSON.stringify(gameState.completedNodes));
 
     // Save today's progress
     saveTodayProgress();
@@ -203,6 +211,9 @@ function updateProgressDisplay() {
     // Update world strip
     updateWorldStrip();
 
+    // Update journey map
+    updateJourneyMap();
+
     // Update each zone card with completion count
     const zoneCards = document.querySelectorAll('.zone-card');
     zoneCards.forEach(card => {
@@ -280,6 +291,59 @@ function updateWorldStrip() {
             }
         }
     });
+}
+
+// ============================================================
+// JOURNEY MAP MANAGEMENT
+// ============================================================
+function updateJourneyMap() {
+    const journeyNodes = document.querySelectorAll('.journey-node');
+    const zones = ['sleep', 'stress', 'nutrition', 'movement', 'hydration', 'mindset'];
+
+    journeyNodes.forEach((node, index) => {
+        const nodeIndex = parseInt(node.dataset.nodeIndex);
+        const zoneName = node.dataset.zone;
+
+        // Remove all state classes
+        node.classList.remove('current', 'completed', 'locked');
+
+        // Determine node state
+        if (gameState.completedNodes.includes(nodeIndex)) {
+            node.classList.add('completed');
+        } else if (nodeIndex === gameState.currentNodeIndex) {
+            node.classList.add('current');
+        } else if (nodeIndex > gameState.currentNodeIndex) {
+            node.classList.add('locked');
+        }
+
+        // For regular zones, check if zone is completed to mark node as completed
+        if (nodeIndex < 6 && zoneName !== 'mixed') {
+            const zoneQuestions = QUESTIONS[zoneName] || [];
+            const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
+            const totalCount = zoneQuestions.length;
+
+            if (completedCount === totalCount && totalCount > 0 && !gameState.completedNodes.includes(nodeIndex)) {
+                // Auto-complete this node and advance to next
+                gameState.completedNodes.push(nodeIndex);
+                if (gameState.currentNodeIndex === nodeIndex) {
+                    gameState.currentNodeIndex = Math.min(nodeIndex + 1, 9);
+                }
+                saveGameState();
+            }
+        }
+    });
+}
+
+function advanceJourneyNode() {
+    // Called when a zone is completed - advance to the next node
+    if (gameState.currentNodeIndex < 9) {
+        if (!gameState.completedNodes.includes(gameState.currentNodeIndex)) {
+            gameState.completedNodes.push(gameState.currentNodeIndex);
+        }
+        gameState.currentNodeIndex++;
+        saveGameState();
+        updateJourneyMap();
+    }
 }
 
 function animateXPIncrease() {
@@ -453,6 +517,15 @@ function initializeOnboarding() {
 // NAVIGATION
 // ============================================================
 function initializeNavigation() {
+    // Journey node click handlers
+    const journeyNodes = document.querySelectorAll('.journey-node');
+    journeyNodes.forEach(node => {
+        node.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleJourneyNodeClick(node);
+        });
+    });
+
     // Zone cards - scroll to questions
     const zoneCards = document.querySelectorAll('.zone-card');
     zoneCards.forEach(card => {
@@ -495,6 +568,41 @@ function initializeNavigation() {
     const modalBackdrop = document.querySelector('.modal-backdrop');
     if (modalBackdrop) {
         modalBackdrop.addEventListener('click', closeQuestionModal);
+    }
+}
+
+function handleJourneyNodeClick(node) {
+    const nodeIndex = parseInt(node.dataset.nodeIndex);
+    const zoneName = node.dataset.zone;
+    const tooltip = document.getElementById('locked-tooltip');
+
+    // Check if node is locked (future node)
+    if (nodeIndex > gameState.currentNodeIndex && !gameState.completedNodes.includes(nodeIndex)) {
+        // Show tooltip
+        if (tooltip) {
+            const rect = node.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + rect.width / 2}px`;
+            tooltip.style.top = `${rect.bottom + 10}px`;
+            tooltip.classList.remove('hidden');
+
+            // Hide tooltip after 2 seconds
+            setTimeout(() => {
+                tooltip.classList.add('hidden');
+            }, 2000);
+        }
+        return;
+    }
+
+    // If it's current or past node, scroll to the zone
+    if (zoneName && zoneName !== 'mixed') {
+        scrollToZone(zoneName);
+    } else if (zoneName === 'mixed') {
+        // For mixed nodes, scroll to a random zone or show mixed questions
+        // For now, just show a message or scroll to home
+        const homeView = document.querySelector('.home-view');
+        if (homeView) {
+            homeView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 }
 

@@ -35,44 +35,83 @@
     </header>
 
     <main class="home-view">
-        <!-- World Strip Progress Bar -->
-        <div class="world-strip">
-            <div class="world-strip-icon" data-zone="sleep">
-                <div class="world-icon-container">
-                    <span class="world-icon">🌙</span>
-                    <span class="world-label">Sleep</span>
+        <!-- Journey Map Strip -->
+        <div class="journey-map">
+            <div class="journey-node" data-node-index="0" data-zone="sleep">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🌙</span>
                 </div>
+                <span class="journey-label">Sleep Camp</span>
             </div>
-            <div class="world-strip-icon" data-zone="stress">
-                <div class="world-icon-container">
-                    <span class="world-icon">🧗‍♂️</span>
-                    <span class="world-label">Stress</span>
+            <div class="journey-node" data-node-index="1" data-zone="stress">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🧗‍♂️</span>
                 </div>
+                <span class="journey-label">Stress Peak</span>
             </div>
-            <div class="world-strip-icon" data-zone="nutrition">
-                <div class="world-icon-container">
-                    <span class="world-icon">🌲</span>
-                    <span class="world-label">Nutrition</span>
+            <div class="journey-node" data-node-index="2" data-zone="nutrition">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🌲</span>
                 </div>
+                <span class="journey-label">Nutrition Forest</span>
             </div>
-            <div class="world-strip-icon" data-zone="movement">
-                <div class="world-icon-container">
-                    <span class="world-icon">🏃</span>
-                    <span class="world-label">Movement</span>
+            <div class="journey-node" data-node-index="3" data-zone="movement">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🏃</span>
                 </div>
+                <span class="journey-label">Movement Trail</span>
             </div>
-            <div class="world-strip-icon" data-zone="hydration">
-                <div class="world-icon-container">
-                    <span class="world-icon">💧</span>
-                    <span class="world-label">Hydration</span>
+            <div class="journey-node" data-node-index="4" data-zone="hydration">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">💧</span>
                 </div>
+                <span class="journey-label">Hydration Spring</span>
             </div>
-            <div class="world-strip-icon" data-zone="mindset">
-                <div class="world-icon-container">
-                    <span class="world-icon">🧠</span>
-                    <span class="world-label">Mindset</span>
+            <div class="journey-node" data-node-index="5" data-zone="mindset">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🧠</span>
                 </div>
+                <span class="journey-label">Mindset Summit</span>
             </div>
+            <div class="journey-node" data-node-index="6" data-zone="mixed">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🎯</span>
+                </div>
+                <span class="journey-label">Mixed 1</span>
+            </div>
+            <div class="journey-node" data-node-index="7" data-zone="mixed">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">⚡</span>
+                </div>
+                <span class="journey-label">Mixed 2</span>
+            </div>
+            <div class="journey-node" data-node-index="8" data-zone="mixed">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🌟</span>
+                </div>
+                <span class="journey-label">Mixed 3</span>
+            </div>
+            <div class="journey-node" data-node-index="9" data-zone="mixed">
+                <div class="journey-node-connector"></div>
+                <div class="journey-node-circle">
+                    <span class="journey-icon">🏆</span>
+                </div>
+                <span class="journey-label">Mixed 4</span>
+            </div>
+        </div>
+
+        <!-- Locked Node Tooltip -->
+        <div id="locked-tooltip" class="locked-tooltip hidden">
+            Clear earlier stops to unlock this area.
         </div>
 
         <div class="zone-grid">
