@@ -1,0 +1,27 @@
+# Netlify configuration for Health Quest
+
+[build]
+  # Publish directory - serve from root
+  publish = "."
+
+# Cache control headers - prevent aggressive caching of HTML/JS
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Ensure proper MIME types for ES modules
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
