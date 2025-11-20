@@ -13,7 +13,10 @@ const STORAGE_KEYS = {
     hasSeenOnboarding: 'hasSeenOnboarding',
     todayHistory: 'hq_todayHistory',
     currentNodeIndex: 'hq_currentNodeIndex',
-    completedNodes: 'hq_completedNodes'
+    completedNodes: 'hq_completedNodes',
+    dailyQuestDate: 'hq_dailyQuestDate',
+    dailyQuestTiles: 'hq_dailyQuestTiles',
+    completedTiles: 'hq_completedTiles'
 };
 
 let gameState = {
@@ -23,7 +26,14 @@ let gameState = {
     streak: 0,
     currentLevel: 1,
     currentNodeIndex: 0,
-    completedNodes: []
+    completedNodes: [],
+    completedTiles: [] // Track tiles that have been completed correctly at least once
+};
+
+// Track today's daily quest
+let dailyQuest = {
+    date: null,
+    tiles: [] // Array of 3 tile IDs for today
 };
 
 // Track today's progress
@@ -45,12 +55,16 @@ function loadGameState() {
     gameState.streak = parseInt(localStorage.getItem(STORAGE_KEYS.streak)) || 0;
     gameState.currentNodeIndex = parseInt(localStorage.getItem(STORAGE_KEYS.currentNodeIndex)) || 0;
     gameState.completedNodes = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedNodes) || '[]');
+    gameState.completedTiles = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedTiles) || '[]');
 
     // Calculate current level
     gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
 
     // Load today's progress
     loadTodayProgress();
+
+    // Load or initialize daily quest
+    loadDailyQuest();
 
     console.log('Game state loaded:', gameState);
 }
@@ -63,6 +77,7 @@ function saveGameState() {
     localStorage.setItem(STORAGE_KEYS.streak, gameState.streak.toString());
     localStorage.setItem(STORAGE_KEYS.currentNodeIndex, gameState.currentNodeIndex.toString());
     localStorage.setItem(STORAGE_KEYS.completedNodes, JSON.stringify(gameState.completedNodes));
+    localStorage.setItem(STORAGE_KEYS.completedTiles, JSON.stringify(gameState.completedTiles));
 
     // Save today's progress
     saveTodayProgress();
@@ -98,6 +113,156 @@ function saveTodayProgress() {
     const today = new Date().toISOString().split('T')[0];
     todayProgress.date = today;
     localStorage.setItem(STORAGE_KEYS.todayHistory, JSON.stringify(todayProgress));
+}
+
+// ============================================================
+// DAILY QUEST SYSTEM
+// ============================================================
+function loadDailyQuest() {
+    const today = new Date().toISOString().split('T')[0];
+    const savedDate = localStorage.getItem(STORAGE_KEYS.dailyQuestDate);
+    const savedTiles = localStorage.getItem(STORAGE_KEYS.dailyQuestTiles);
+
+    if (savedDate === today && savedTiles) {
+        // Use existing daily quest for today
+        try {
+            dailyQuest.date = savedDate;
+            dailyQuest.tiles = JSON.parse(savedTiles);
+            console.log('Loaded existing daily quest:', dailyQuest);
+        } catch (e) {
+            // If parsing fails, generate new quest
+            generateDailyQuest();
+        }
+    } else {
+        // Generate new daily quest for today
+        generateDailyQuest();
+    }
+}
+
+function generateDailyQuest() {
+    const today = new Date().toISOString().split('T')[0];
+    dailyQuest.date = today;
+
+    // Get the current node's zone(s)
+    const currentNode = getCurrentNode();
+    let availableQuestions = [];
+
+    if (currentNode.zone === 'mixed') {
+        // For mixed nodes, get questions from all zones
+        const zones = ['sleep', 'stress', 'nutrition', 'movement', 'hydration', 'mindset'];
+        zones.forEach(zone => {
+            const zoneQuestions = QUESTIONS[zone] || [];
+            availableQuestions = availableQuestions.concat(zoneQuestions);
+        });
+    } else {
+        // For regular nodes, get questions from that zone
+        availableQuestions = QUESTIONS[currentNode.zone] || [];
+    }
+
+    // Filter by difficulty based on current level
+    availableQuestions = filterQuestionsByLevel(availableQuestions);
+
+    // Apply no-repeat logic: prefer tiles not yet completed
+    const uncompletedTiles = availableQuestions.filter(q => !gameState.completedTiles.includes(q.id));
+
+    // If we have uncompleted tiles, use those; otherwise use all available
+    const poolForSelection = uncompletedTiles.length > 0 ? uncompletedTiles : availableQuestions;
+
+    // Randomly select 3 tiles (or fewer if not enough available)
+    const selectedTiles = [];
+    const tilesToSelect = Math.min(3, poolForSelection.length);
+    const shuffled = [...poolForSelection].sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < tilesToSelect; i++) {
+        selectedTiles.push(shuffled[i].id);
+    }
+
+    dailyQuest.tiles = selectedTiles;
+
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEYS.dailyQuestDate, dailyQuest.date);
+    localStorage.setItem(STORAGE_KEYS.dailyQuestTiles, JSON.stringify(dailyQuest.tiles));
+
+    console.log('Generated new daily quest:', dailyQuest);
+}
+
+function getCurrentNode() {
+    const nodeIndex = gameState.currentNodeIndex;
+    const journeyNodes = [
+        { zone: 'sleep', label: 'Sleep Camp' },
+        { zone: 'stress', label: 'Stress Peak' },
+        { zone: 'nutrition', label: 'Nutrition Forest' },
+        { zone: 'movement', label: 'Movement Trail' },
+        { zone: 'hydration', label: 'Hydration Spring' },
+        { zone: 'mindset', label: 'Mindset Summit' },
+        { zone: 'mixed', label: 'Mixed 1' },
+        { zone: 'mixed', label: 'Mixed 2' },
+        { zone: 'mixed', label: 'Mixed 3' },
+        { zone: 'mixed', label: 'Mixed 4' }
+    ];
+
+    return journeyNodes[Math.min(nodeIndex, journeyNodes.length - 1)];
+}
+
+function filterQuestionsByLevel(questions) {
+    const level = gameState.currentLevel;
+
+    if (level <= 2) {
+        // Level 1-2: mostly basic tiles (but include all if not enough basic)
+        const basic = questions.filter(q => q.difficulty === 'basic');
+        return basic.length >= 3 ? basic : questions;
+    } else if (level <= 4) {
+        // Level 3-4: mix of basic and core
+        return questions.filter(q => q.difficulty === 'basic' || q.difficulty === 'core');
+    } else {
+        // Level 5+: include all difficulty tiers
+        return questions;
+    }
+}
+
+function checkNodeCompletion() {
+    const currentNode = getCurrentNode();
+
+    if (currentNode.zone === 'mixed') {
+        // For mixed nodes, check if all 3 daily tiles are completed
+        const allDailyTilesCompleted = dailyQuest.tiles.every(tileId =>
+            gameState.completedTiles.includes(tileId)
+        );
+
+        if (allDailyTilesCompleted && dailyQuest.tiles.length > 0) {
+            markNodeAsCompleted();
+        }
+    } else {
+        // For regular nodes, check if all tiles in that zone are completed
+        const zoneQuestions = QUESTIONS[currentNode.zone] || [];
+        const allZoneTilesCompleted = zoneQuestions.every(q =>
+            gameState.completedTiles.includes(q.id)
+        );
+
+        if (allZoneTilesCompleted && zoneQuestions.length > 0) {
+            markNodeAsCompleted();
+        }
+    }
+}
+
+function markNodeAsCompleted() {
+    const nodeIndex = gameState.currentNodeIndex;
+
+    if (!gameState.completedNodes.includes(nodeIndex)) {
+        gameState.completedNodes.push(nodeIndex);
+
+        // Advance to next node if available
+        if (nodeIndex < 9) {
+            gameState.currentNodeIndex = nodeIndex + 1;
+            // Generate new daily quest for the new node
+            generateDailyQuest();
+        }
+
+        saveGameState();
+        updateJourneyMap();
+
+        console.log(`Node ${nodeIndex} completed! Advanced to node ${gameState.currentNodeIndex}`);
+    }
 }
 
 // ============================================================
@@ -145,6 +310,12 @@ function awardXP(question) {
 
     // First time completing - award XP
     gameState.completedQuestions.push(question.id);
+
+    // Track this tile as completed (for no-repeat logic)
+    if (!gameState.completedTiles.includes(question.id)) {
+        gameState.completedTiles.push(question.id);
+    }
+
     gameState.totalXP += question.xpValue;
 
     // Update current level
@@ -159,6 +330,9 @@ function awardXP(question) {
 
     // Save state
     saveGameState();
+
+    // Check if node should be completed
+    checkNodeCompletion();
 
     // Update UI
     updateProgressDisplay();
@@ -221,7 +395,7 @@ function updateProgressDisplay() {
 
         // Get questions for this zone
         const zoneQuestions = QUESTIONS[zoneName] || [];
-        const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
+        const completedCount = zoneQuestions.filter(q => gameState.completedTiles.includes(q.id)).length;
         const totalCount = zoneQuestions.length;
 
         // Update progress text
@@ -279,7 +453,7 @@ function updateWorldStrip() {
 
     zones.forEach(zoneName => {
         const zoneQuestions = QUESTIONS[zoneName] || [];
-        const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
+        const completedCount = zoneQuestions.filter(q => gameState.completedTiles.includes(q.id)).length;
         const totalCount = zoneQuestions.length;
 
         const worldIcon = document.querySelector(`.world-strip-icon[data-zone="${zoneName}"]`);
@@ -319,7 +493,7 @@ function updateJourneyMap() {
         // For regular zones, check if zone is completed to mark node as completed
         if (nodeIndex < 6 && zoneName !== 'mixed') {
             const zoneQuestions = QUESTIONS[zoneName] || [];
-            const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
+            const completedCount = zoneQuestions.filter(q => gameState.completedTiles.includes(q.id)).length;
             const totalCount = zoneQuestions.length;
 
             if (completedCount === totalCount && totalCount > 0 && !gameState.completedNodes.includes(nodeIndex)) {
@@ -360,32 +534,56 @@ function animateXPIncrease() {
 // QUESTION TILE RENDERING
 // ============================================================
 function renderQuestionTiles() {
-    // For each zone, render its questions
+    // For each zone, render its daily quest tiles (if applicable)
     Object.keys(QUESTIONS).forEach(zoneName => {
         const container = document.querySelector(`.zone-question-list[data-zone="${zoneName}"]`);
         if (!container) return;
 
-        const questions = QUESTIONS[zoneName];
-
         // Clear existing content
         container.innerHTML = '';
 
+        // Get questions for this zone
+        const allZoneQuestions = QUESTIONS[zoneName];
+
+        // Filter to only show daily quest tiles for the current node
+        const currentNode = getCurrentNode();
+        let questionsToShow = [];
+
+        if (currentNode.zone === zoneName) {
+            // Show daily quest tiles for current node's zone
+            questionsToShow = allZoneQuestions.filter(q => dailyQuest.tiles.includes(q.id));
+        } else if (currentNode.zone === 'mixed') {
+            // For mixed nodes, show daily quest tiles from any zone
+            questionsToShow = allZoneQuestions.filter(q => dailyQuest.tiles.includes(q.id));
+        } else {
+            // Not the current zone, show all zone questions but indicate they're locked
+            // or show nothing - for now we'll show nothing
+            questionsToShow = [];
+        }
+
         // Render each question as a tile
-        questions.forEach((question, index) => {
+        questionsToShow.forEach((question, index) => {
             const tile = document.createElement('div');
             tile.className = 'question-tile';
             tile.dataset.questionId = question.id;
 
             // Check if completed
-            const isCompleted = gameState.completedQuestions.includes(question.id);
+            const isCompleted = gameState.completedTiles.includes(question.id);
             if (isCompleted) {
                 tile.classList.add('completed');
             }
 
+            // Add difficulty indicator
+            const difficultyEmoji = {
+                'basic': '⭐',
+                'core': '⭐⭐',
+                'challenge': '⭐⭐⭐'
+            };
+
             // Build tile HTML
             tile.innerHTML = `
                 <div class="question-tile-header">
-                    <span class="question-number">Question ${index + 1}</span>
+                    <span class="question-number">${difficultyEmoji[question.difficulty] || ''} Question ${dailyQuest.tiles.indexOf(question.id) + 1}</span>
                     <span class="question-xp">${isCompleted ? 'Completed' : `XP +${question.xpValue}`}</span>
                 </div>
                 <div class="question-preview">${question.text}</div>
@@ -398,6 +596,16 @@ function renderQuestionTiles() {
 
             container.appendChild(tile);
         });
+
+        // If no questions to show, add a message
+        if (questionsToShow.length === 0) {
+            const message = document.createElement('div');
+            message.className = 'no-questions-message';
+            message.textContent = currentNode.zone === zoneName
+                ? 'Complete today\'s daily quest tiles to progress!'
+                : 'Visit the current node to see today\'s quest tiles.';
+            container.appendChild(message);
+        }
     });
 }
 
