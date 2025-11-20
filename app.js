@@ -4,6 +4,36 @@ import { QUESTIONS } from './data.js';
 // Application initialization
 console.log('Health Quest app initialized');
 
+// Check and show onboarding modal on first visit
+function checkOnboarding() {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+
+    if (!hasSeenOnboarding) {
+        // Show the onboarding modal
+        const modal = document.getElementById('onboarding-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+}
+
+// Handle onboarding modal "Let's start" button
+function initializeOnboarding() {
+    const startButton = document.getElementById('start-button');
+    const modal = document.getElementById('onboarding-modal');
+
+    if (startButton && modal) {
+        startButton.addEventListener('click', () => {
+            // Hide the modal
+            modal.style.display = 'none';
+
+            // Save the flag in localStorage
+            localStorage.setItem('hasSeenOnboarding', 'true');
+            console.log('Onboarding completed and saved');
+        });
+    }
+}
+
 // State management
 let currentView = 'home';
 let selectedZone = null;
@@ -71,6 +101,12 @@ function updateStreak() {
 
 // Load state on app initialization
 loadGameState();
+
+// Initialize onboarding modal functionality
+initializeOnboarding();
+
+// Check and show onboarding modal if needed
+checkOnboarding();
 
 // Get all zone cards
 const zoneCards = document.querySelectorAll('.zone-card');
