@@ -1,4 +1,12 @@
 // Health Quest - Main Application Logic
+//
+// DEBUGGING INSTRUCTIONS:
+// 1. Open the browser console (F12 or Right-click > Inspect > Console)
+// 2. Look for initialization messages showing game state and element counts
+// 3. Click on any element - you should see detailed click logs
+// 4. Run window.debugClickability() in the console to check element states
+// 5. All clicks are logged with element details and potential blocking issues
+//
 import { QUESTIONS } from './data.js';
 import { triggerConfetti } from './confetti.js';
 
@@ -603,6 +611,9 @@ function markNodeAsCompleted() {
     if (!gameState.completedNodes.includes(nodeIndex)) {
         gameState.completedNodes.push(nodeIndex);
 
+        // Show node cleared toast
+        showNodeClearedToast();
+
         // Advance to next node if available
         if (nodeIndex < 9) {
             gameState.currentNodeIndex = nodeIndex + 1;
@@ -617,16 +628,42 @@ function markNodeAsCompleted() {
     }
 }
 
+function showNodeClearedToast() {
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="achievement-toast-icon">✅</div>
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-title">Progress</div>
+            <div class="achievement-toast-name">You cleared this stop on the map. The next area just opened.</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4000);
+}
+
 // ============================================================
 // STREAK LOGIC
 // ============================================================
 function updateStreak() {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    let streakChanged = false;
 
     if (!gameState.lastPlayDate) {
         // First time playing
         gameState.streak = 1;
         gameState.lastPlayDate = today;
+        streakChanged = true;
     } else if (gameState.lastPlayDate === today) {
         // Already played today, streak stays the same
         return;
@@ -639,12 +676,43 @@ function updateStreak() {
         if (daysDiff === 1) {
             // Exactly one day after, increase streak
             gameState.streak += 1;
+            streakChanged = true;
         } else {
             // More than one day, reset streak
             gameState.streak = 1;
+            streakChanged = true;
         }
         gameState.lastPlayDate = today;
     }
+
+    // Show streak toast only if it's a continuing streak (not reset to 1)
+    if (streakChanged && gameState.streak > 1) {
+        showStreakToast();
+    }
+}
+
+function showStreakToast() {
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="achievement-toast-icon">🔥</div>
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-title">Daily Streak</div>
+            <div class="achievement-toast-name">Streak updated: ${gameState.streak} days in a row.</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4000);
 }
 
 // ============================================================
@@ -705,7 +773,10 @@ function triggerLevelUp() {
     console.log('Level up!', gameState.currentLevel);
     triggerConfetti();
 
-    // Optional: Add a visual notification
+    // Show level-up toast
+    showLevelUpToast();
+
+    // Add a visual notification
     const levelLabel = document.getElementById('level-label');
     if (levelLabel) {
         levelLabel.classList.add('level-up-animate');
@@ -713,6 +784,30 @@ function triggerLevelUp() {
             levelLabel.classList.remove('level-up-animate');
         }, 1000);
     }
+}
+
+function showLevelUpToast() {
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="achievement-toast-icon">⬆️</div>
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-title">Level Up</div>
+            <div class="achievement-toast-name">You just unlocked a higher challenge tier.</div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4000);
 }
 
 // ============================================================
@@ -826,6 +921,7 @@ function updateWorldStrip() {
 // JOURNEY MAP MANAGEMENT
 // ============================================================
 function updateJourneyMap() {
+    console.log('Updating journey map, current node index:', gameState.currentNodeIndex);
     const journeyNodes = document.querySelectorAll('.journey-node');
     const zones = ['sleep', 'stress', 'nutrition', 'movement', 'hydration', 'mindset'];
 
@@ -839,10 +935,15 @@ function updateJourneyMap() {
         // Determine node state
         if (gameState.completedNodes.includes(nodeIndex)) {
             node.classList.add('completed');
+            console.log(`  Node ${nodeIndex} marked as completed`);
         } else if (nodeIndex === gameState.currentNodeIndex) {
             node.classList.add('current');
+            console.log(`  Node ${nodeIndex} marked as current`);
         } else if (nodeIndex > gameState.currentNodeIndex) {
             node.classList.add('locked');
+            console.log(`  Node ${nodeIndex} marked as locked`);
+        } else {
+            console.log(`  Node ${nodeIndex} is available (past node)`);
         }
 
         // For regular zones, check if zone is completed to mark node as completed
@@ -861,6 +962,8 @@ function updateJourneyMap() {
             }
         }
     });
+
+    console.log('Journey map update complete');
 }
 
 function advanceJourneyNode() {
@@ -889,10 +992,17 @@ function animateXPIncrease() {
 // QUESTION TILE RENDERING
 // ============================================================
 function renderQuestionTiles() {
+    console.log('Rendering question tiles for current node...');
+    const currentNode = getCurrentNode();
+    console.log('Current node:', currentNode);
+
     // For each zone, render its daily quest tiles (if applicable)
     Object.keys(QUESTIONS).forEach(zoneName => {
         const container = document.querySelector(`.zone-question-list[data-zone="${zoneName}"]`);
-        if (!container) return;
+        if (!container) {
+            console.warn(`Container not found for zone: ${zoneName}`);
+            return;
+        }
 
         // Clear existing content
         container.innerHTML = '';
@@ -901,18 +1011,20 @@ function renderQuestionTiles() {
         const allZoneQuestions = QUESTIONS[zoneName];
 
         // Filter to only show daily quest tiles for the current node
-        const currentNode = getCurrentNode();
         let questionsToShow = [];
 
         if (currentNode.zone === zoneName) {
             // Show daily quest tiles for current node's zone
             questionsToShow = allZoneQuestions.filter(q => dailyQuest.tiles.includes(q.id));
+            console.log(`Zone ${zoneName} is current node - showing ${questionsToShow.length} daily quest tiles`);
         } else if (currentNode.zone === 'mixed') {
             // For mixed nodes, show daily quest tiles from any zone
             questionsToShow = allZoneQuestions.filter(q => dailyQuest.tiles.includes(q.id));
+            if (questionsToShow.length > 0) {
+                console.log(`Mixed node - showing ${questionsToShow.length} tiles from ${zoneName}`);
+            }
         } else {
-            // Not the current zone, show all zone questions but indicate they're locked
-            // or show nothing - for now we'll show nothing
+            // Not the current zone, show nothing
             questionsToShow = [];
         }
 
@@ -946,6 +1058,7 @@ function renderQuestionTiles() {
 
             // Add click handler
             tile.addEventListener('click', () => {
+                console.log(`Question tile clicked: ${question.id}`);
                 openQuestionModal(question);
             });
 
@@ -962,6 +1075,8 @@ function renderQuestionTiles() {
             container.appendChild(message);
         }
     });
+
+    console.log('Question tiles rendering complete');
 }
 
 // ============================================================
@@ -1032,16 +1147,16 @@ function handleAnswerSelection(selectedIndex) {
         const wasNewCompletion = awardXP(currentQuestion);
 
         if (wasNewCompletion) {
-            feedbackElement.textContent = `Correct! +${currentQuestion.xpValue} XP\n\n${currentQuestion.explanation}`;
+            feedbackElement.textContent = `Correct. +${currentQuestion.xpValue} XP.\n\n${currentQuestion.explanation}`;
             feedbackElement.className = 'modal-feedback correct';
         } else {
-            feedbackElement.textContent = `Correct! (Already completed)\n\n${currentQuestion.explanation}`;
+            feedbackElement.textContent = `Correct. (Already completed)\n\n${currentQuestion.explanation}`;
             feedbackElement.className = 'modal-feedback correct';
         }
     } else {
         // Show incorrect feedback
         const correctAnswer = currentQuestion.options[currentQuestion.correctIndex];
-        feedbackElement.textContent = `Not quite. The right answer is: "${correctAnswer}"\n\n${currentQuestion.explanation}`;
+        feedbackElement.textContent = `Not quite. Check the explanation and try again.\n\n${currentQuestion.explanation}`;
         feedbackElement.className = 'modal-feedback incorrect';
 
         // Also highlight the correct answer
@@ -1080,40 +1195,61 @@ function initializeOnboarding() {
 // NAVIGATION
 // ============================================================
 function initializeNavigation() {
+    console.log('Initializing navigation...');
+
     // Journey node click handlers
     const journeyNodes = document.querySelectorAll('.journey-node');
-    journeyNodes.forEach(node => {
+    console.log(`Found ${journeyNodes.length} journey nodes`);
+    journeyNodes.forEach((node, index) => {
         node.addEventListener('click', (e) => {
             e.preventDefault();
+            console.log(`Journey node ${index} clicked`);
             handleJourneyNodeClick(node);
+        });
+
+        // Add hover handlers for tooltips
+        node.addEventListener('mouseenter', (e) => {
+            showNodeTooltip(node);
+        });
+
+        node.addEventListener('mouseleave', (e) => {
+            hideAllTooltips();
         });
     });
 
     // Zone cards - scroll to questions
     const zoneCards = document.querySelectorAll('.zone-card');
-    zoneCards.forEach(card => {
+    console.log(`Found ${zoneCards.length} zone cards`);
+    zoneCards.forEach((card, index) => {
         card.addEventListener('click', (e) => {
             e.preventDefault();
             const zoneName = card.dataset.zone;
+            console.log(`Zone card ${index} (${zoneName}) clicked`);
             scrollToZone(zoneName);
         });
     });
 
-    // World strip icons - scroll to zone
+    // World strip icons - scroll to zone (if they exist)
     const worldStripIcons = document.querySelectorAll('.world-strip-icon');
-    worldStripIcons.forEach(icon => {
-        icon.addEventListener('click', (e) => {
-            e.preventDefault();
-            const zoneName = icon.dataset.zone;
-            scrollToZone(zoneName);
+    if (worldStripIcons.length > 0) {
+        console.log(`Found ${worldStripIcons.length} world strip icons`);
+        worldStripIcons.forEach((icon, index) => {
+            icon.addEventListener('click', (e) => {
+                e.preventDefault();
+                const zoneName = icon.dataset.zone;
+                console.log(`World strip icon ${index} (${zoneName}) clicked`);
+                scrollToZone(zoneName);
+            });
         });
-    });
+    }
 
     // Back to home buttons
     const backButtons = document.querySelectorAll('.back-to-home-button');
-    backButtons.forEach(button => {
+    console.log(`Found ${backButtons.length} back buttons`);
+    backButtons.forEach((button, index) => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
+            console.log(`Back button ${index} clicked`);
             const homeView = document.querySelector('.home-view');
             if (homeView) {
                 homeView.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1124,14 +1260,28 @@ function initializeNavigation() {
     // Modal close button
     const modalCloseBtn = document.getElementById('modal-close-btn');
     if (modalCloseBtn) {
-        modalCloseBtn.addEventListener('click', closeQuestionModal);
+        modalCloseBtn.addEventListener('click', () => {
+            console.log('Modal close button clicked');
+            closeQuestionModal();
+        });
+        console.log('Modal close button handler attached');
+    } else {
+        console.warn('Modal close button not found');
     }
 
     // Modal backdrop (click to close)
-    const modalBackdrop = document.querySelector('.modal-backdrop');
+    const modalBackdrop = document.querySelector('#question-modal .modal-backdrop');
     if (modalBackdrop) {
-        modalBackdrop.addEventListener('click', closeQuestionModal);
+        modalBackdrop.addEventListener('click', () => {
+            console.log('Modal backdrop clicked');
+            closeQuestionModal();
+        });
+        console.log('Modal backdrop handler attached');
+    } else {
+        console.warn('Modal backdrop not found');
     }
+
+    console.log('Navigation initialization complete');
 }
 
 function handleJourneyNodeClick(node) {
@@ -1169,6 +1319,45 @@ function handleJourneyNodeClick(node) {
     }
 }
 
+function showNodeTooltip(node) {
+    const nodeIndex = parseInt(node.dataset.nodeIndex);
+    const lockedTooltip = document.getElementById('locked-tooltip');
+    const currentTooltip = document.getElementById('current-tooltip');
+
+    // Hide all tooltips first
+    hideAllTooltips();
+
+    // Check if node is locked (future node)
+    if (nodeIndex > gameState.currentNodeIndex && !gameState.completedNodes.includes(nodeIndex)) {
+        if (lockedTooltip) {
+            const rect = node.getBoundingClientRect();
+            lockedTooltip.style.left = `${rect.left + rect.width / 2}px`;
+            lockedTooltip.style.top = `${rect.bottom + 10}px`;
+            lockedTooltip.classList.remove('hidden');
+        }
+    } else if (nodeIndex === gameState.currentNodeIndex) {
+        // Current node
+        if (currentTooltip) {
+            const rect = node.getBoundingClientRect();
+            currentTooltip.style.left = `${rect.left + rect.width / 2}px`;
+            currentTooltip.style.top = `${rect.bottom + 10}px`;
+            currentTooltip.classList.remove('hidden');
+        }
+    }
+}
+
+function hideAllTooltips() {
+    const lockedTooltip = document.getElementById('locked-tooltip');
+    const currentTooltip = document.getElementById('current-tooltip');
+
+    if (lockedTooltip) {
+        lockedTooltip.classList.add('hidden');
+    }
+    if (currentTooltip) {
+        currentTooltip.classList.add('hidden');
+    }
+}
+
 function scrollToZone(zoneName) {
     console.log(`Scrolling to zone: ${zoneName}`);
 
@@ -1191,49 +1380,202 @@ function scrollToZone(zoneName) {
 // APP INITIALIZATION
 // ============================================================
 function initializeApp() {
-    // Load saved state
-    loadGameState();
+    try {
+        console.log('Starting app initialization...');
+        console.log('Current URL:', window.location.href);
+        console.log('Document ready state:', document.readyState);
 
-    // Initialize onboarding
-    initializeOnboarding();
-    checkOnboarding();
-
-    // Render question tiles
-    renderQuestionTiles();
-
-    // Update all UI elements
-    updateProgressDisplay();
-
-    // Update achievements display
-    updateAchievementsDisplay();
-
-    // Update weekly boss button visibility
-    updateWeeklyBossButton();
-
-    // Set up navigation
-    initializeNavigation();
-
-    // Set up weekly boss button click handler
-    const weeklyBossBtn = document.getElementById('weekly-boss-button');
-    if (weeklyBossBtn) {
-        weeklyBossBtn.addEventListener('click', startWeeklyBoss);
-    }
-
-    // Set up achievements toggle
-    const achievementsToggle = document.getElementById('achievements-toggle');
-    const achievementsContent = document.getElementById('achievements-content');
-    if (achievementsToggle && achievementsContent) {
-        achievementsToggle.addEventListener('click', () => {
-            achievementsContent.classList.toggle('collapsed');
-            const icon = achievementsToggle.querySelector('.toggle-icon');
-            if (icon) {
-                icon.textContent = achievementsContent.classList.contains('collapsed') ? '▼' : '▲';
-            }
+        // Load saved state
+        loadGameState();
+        console.log('Game state loaded:', {
+            totalXP: gameState.totalXP,
+            currentLevel: gameState.currentLevel,
+            currentNodeIndex: gameState.currentNodeIndex,
+            completedNodes: gameState.completedNodes,
+            completedTiles: gameState.completedTiles.length
         });
-    }
 
-    console.log('App initialization complete');
+        // Initialize onboarding
+        initializeOnboarding();
+        checkOnboarding();
+        console.log('Onboarding initialized');
+
+        // Render question tiles
+        renderQuestionTiles();
+        console.log('Question tiles rendered');
+
+        // Update all UI elements
+        updateProgressDisplay();
+        console.log('Progress display updated');
+
+        // Update achievements display
+        updateAchievementsDisplay();
+        console.log('Achievements display updated');
+
+        // Update weekly boss button visibility
+        updateWeeklyBossButton();
+        console.log('Weekly boss button updated');
+
+        // Set up navigation
+        initializeNavigation();
+        console.log('Navigation initialized');
+
+        // Set up weekly boss button click handler
+        const weeklyBossBtn = document.getElementById('weekly-boss-button');
+        if (weeklyBossBtn) {
+            weeklyBossBtn.addEventListener('click', () => {
+                console.log('Weekly boss button clicked');
+                startWeeklyBoss();
+            });
+            console.log('Weekly boss button handler attached');
+        }
+
+        // Set up achievements toggle
+        const achievementsToggle = document.getElementById('achievements-toggle');
+        const achievementsContent = document.getElementById('achievements-content');
+        if (achievementsToggle && achievementsContent) {
+            achievementsToggle.addEventListener('click', () => {
+                console.log('Achievements toggle clicked');
+                achievementsContent.classList.toggle('collapsed');
+                const icon = achievementsToggle.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.textContent = achievementsContent.classList.contains('collapsed') ? '▼' : '▲';
+                }
+            });
+            console.log('Achievements toggle handler attached');
+        } else {
+            console.warn('Achievements toggle or content element not found');
+        }
+
+        // Set up help button
+        const helpButton = document.getElementById('help-button');
+        const helpModal = document.getElementById('help-modal');
+        const helpCloseBtn = document.getElementById('help-close-btn');
+
+        if (helpButton && helpModal) {
+            helpButton.addEventListener('click', () => {
+                console.log('Help button clicked');
+                helpModal.classList.remove('hidden');
+            });
+            console.log('Help button handler attached');
+        } else {
+            console.warn('Help button or modal not found');
+        }
+
+        if (helpCloseBtn && helpModal) {
+            helpCloseBtn.addEventListener('click', () => {
+                console.log('Help modal closed');
+                helpModal.classList.add('hidden');
+            });
+
+            // Also close on backdrop click
+            const helpBackdrop = helpModal.querySelector('.modal-backdrop');
+            if (helpBackdrop) {
+                helpBackdrop.addEventListener('click', () => {
+                    console.log('Help modal backdrop clicked');
+                    helpModal.classList.add('hidden');
+                });
+            }
+            console.log('Help close handler attached');
+        }
+
+        // Verify all modals are properly hidden
+        const questionModal = document.getElementById('question-modal');
+        const weeklyBossModal = document.getElementById('weekly-boss-modal');
+        const onboardingModal = document.getElementById('onboarding-modal');
+
+        console.log('Modal states:', {
+            questionModal: questionModal ? questionModal.classList.contains('hidden') : 'not found',
+            weeklyBossModal: weeklyBossModal ? weeklyBossModal.classList.contains('hidden') : 'not found',
+            onboardingModal: onboardingModal ? onboardingModal.style.display : 'not found'
+        });
+
+        // Add global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Global error caught:', event.error);
+        });
+
+        // Add unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+
+        console.log('App initialization complete - all event listeners attached');
+        console.log('You should now be able to click on elements. Check console for click events.');
+    } catch (error) {
+        console.error('Error during app initialization:', error);
+        console.error('Stack trace:', error.stack);
+        alert('There was an error initializing the app. Please refresh the page. Error: ' + error.message);
+    }
 }
+
+// ============================================================
+// DEBUGGING AND DIAGNOSTIC TOOLS
+// ============================================================
+// Add click detection for debugging
+document.addEventListener('click', (e) => {
+    console.log('Click detected on:', e.target);
+    console.log('  - Tag:', e.target.tagName);
+    console.log('  - Classes:', e.target.className);
+    console.log('  - ID:', e.target.id);
+    console.log('  - Data attributes:', Object.keys(e.target.dataset).length > 0 ? e.target.dataset : 'none');
+
+    // Check if click is being blocked by z-index issues
+    const rect = e.target.getBoundingClientRect();
+    const elementAtPoint = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    if (elementAtPoint !== e.target) {
+        console.warn('  ⚠️ Click may be blocked! Element at point:', elementAtPoint);
+    }
+}, true); // Use capture phase to catch all clicks
+
+// Diagnostic function to check element clickability
+window.debugClickability = () => {
+    console.log('=== CLICKABILITY DIAGNOSTIC ===');
+
+    const elements = {
+        'Journey Nodes': document.querySelectorAll('.journey-node'),
+        'Zone Cards': document.querySelectorAll('.zone-card'),
+        'Question Tiles': document.querySelectorAll('.question-tile'),
+        'Back Buttons': document.querySelectorAll('.back-to-home-button'),
+        'Achievements Toggle': document.querySelectorAll('#achievements-toggle'),
+        'Modal Close Button': document.querySelectorAll('#modal-close-btn')
+    };
+
+    Object.entries(elements).forEach(([name, nodeList]) => {
+        console.log(`\n${name}: ${nodeList.length} found`);
+        nodeList.forEach((el, i) => {
+            const styles = window.getComputedStyle(el);
+            const rect = el.getBoundingClientRect();
+            const topElement = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+            console.log(`  [${i}]:`, {
+                visible: styles.display !== 'none' && styles.visibility !== 'hidden',
+                pointerEvents: styles.pointerEvents,
+                zIndex: styles.zIndex,
+                cursor: styles.cursor,
+                topElementSame: topElement === el,
+                topElement: topElement ? `${topElement.tagName}.${topElement.className}` : 'none'
+            });
+        });
+    });
+
+    console.log('\n=== MODAL STATES ===');
+    ['question-modal', 'weekly-boss-modal', 'onboarding-modal'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            const styles = window.getComputedStyle(modal);
+            console.log(`${id}:`, {
+                display: styles.display,
+                classList: Array.from(modal.classList),
+                zIndex: styles.zIndex
+            });
+        }
+    });
+
+    console.log('\n=== END DIAGNOSTIC ===');
+};
+
+console.log('Diagnostic tools loaded. Run window.debugClickability() to check element states.');
 
 // Start the app when DOM is ready
 if (document.readyState === 'loading') {

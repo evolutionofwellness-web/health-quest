@@ -21,7 +21,7 @@ const QUESTIONS = {
             options: ['Using phone in bed', 'Keeping room cool', 'Drinking coffee at night', 'Eating heavy meals before bed'],
             correctIndex: 1,
             explanation: 'A cool room temperature (around 65-68°F) promotes better sleep by supporting the body\'s natural temperature drop during sleep.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'sleep-3',
@@ -31,7 +31,7 @@ const QUESTIONS = {
             options: ['Money owed to a sleep clinic', 'The cumulative effect of not getting enough sleep', 'A type of sleeping disorder', 'The time it takes to fall asleep'],
             correctIndex: 1,
             explanation: 'Sleep debt is the accumulated difference between the amount of sleep you need and the amount you actually get, which can impair cognitive and physical performance.',
-            xpValue: 10
+            xpValue: 30
         }
     ],
     stress: [
@@ -53,7 +53,7 @@ const QUESTIONS = {
             options: ['A travel decision', 'The body\'s automatic stress reaction', 'A type of exercise', 'A mental health condition'],
             correctIndex: 1,
             explanation: 'The fight or flight response is the body\'s automatic physiological reaction to perceived threats, releasing hormones like adrenaline and cortisol.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'stress-3',
@@ -63,7 +63,7 @@ const QUESTIONS = {
             options: ['Skipping meals', 'Regular exercise', 'Avoiding sleep', 'Staying indoors always'],
             correctIndex: 1,
             explanation: 'Regular exercise reduces stress hormones like cortisol and stimulates production of endorphins, the body\'s natural mood elevators.',
-            xpValue: 10
+            xpValue: 30
         }
     ],
     nutrition: [
@@ -85,7 +85,7 @@ const QUESTIONS = {
             options: ['It makes food taste better', 'It supports digestive health', 'It increases sugar absorption', 'It prevents all diseases'],
             correctIndex: 1,
             explanation: 'Fiber promotes healthy digestion, helps maintain stable blood sugar levels, and supports heart health by lowering cholesterol.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'nutrition-3',
@@ -95,7 +95,7 @@ const QUESTIONS = {
             options: ['All carbohydrates', 'Half vegetables, quarter protein, quarter grains', 'Only fruits', 'Mostly processed foods'],
             correctIndex: 1,
             explanation: 'A balanced plate typically consists of half vegetables/fruits, a quarter lean protein, and a quarter whole grains for optimal nutrition.',
-            xpValue: 10
+            xpValue: 30
         }
     ],
     movement: [
@@ -117,7 +117,7 @@ const QUESTIONS = {
             options: ['Only builds large muscles', 'Improves bone density and metabolism', 'Makes you gain weight', 'Reduces flexibility'],
             correctIndex: 1,
             explanation: 'Strength training improves bone density, increases metabolism, supports joint health, and helps maintain muscle mass as we age.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'movement-3',
@@ -127,7 +127,7 @@ const QUESTIONS = {
             options: ['It burns calories', 'It improves flexibility and reduces injury risk', 'It builds muscle mass', 'It replaces cardio exercise'],
             correctIndex: 1,
             explanation: 'Regular stretching improves flexibility, increases range of motion, enhances circulation, and can help prevent injuries during physical activity.',
-            xpValue: 10
+            xpValue: 30
         }
     ],
     hydration: [
@@ -149,7 +149,7 @@ const QUESTIONS = {
             options: ['Clear urine', 'Dark yellow urine', 'Excessive energy', 'Improved focus'],
             correctIndex: 1,
             explanation: 'Dark yellow urine is a common sign of dehydration, indicating that your body needs more water to properly dilute waste products.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'hydration-3',
@@ -159,7 +159,7 @@ const QUESTIONS = {
             options: ['Only when very thirsty', 'Throughout the day', 'Only at meals', 'Only after exercise'],
             correctIndex: 1,
             explanation: 'It\'s best to drink water consistently throughout the day rather than waiting until you\'re thirsty, as thirst is already a sign of mild dehydration.',
-            xpValue: 10
+            xpValue: 30
         }
     ],
     mindset: [
@@ -181,7 +181,7 @@ const QUESTIONS = {
             options: ['Never thinking', 'Being present in the moment', 'Constant worrying', 'Multitasking'],
             correctIndex: 1,
             explanation: 'Mindfulness is the practice of being fully present and engaged in the current moment, without judgment, which reduces stress and improves well-being.',
-            xpValue: 10
+            xpValue: 20
         },
         {
             id: 'mindset-3',
@@ -191,7 +191,7 @@ const QUESTIONS = {
             options: ['It makes problems disappear', 'It improves mental well-being and perspective', 'It prevents all negative emotions', 'It requires no effort'],
             correctIndex: 1,
             explanation: 'Regular gratitude practice has been shown to improve mental well-being, increase positive emotions, and help maintain a balanced perspective on life.',
-            xpValue: 10
+            xpValue: 30
         }
     ]
 };
