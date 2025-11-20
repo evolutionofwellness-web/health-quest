@@ -1,10 +1,17 @@
 // Health Quest - Main Application Logic
+import { QUESTIONS } from './data.js';
 
 // Application initialization
 console.log('Health Quest app initialized');
 
+// State management
+let currentView = 'home';
+let selectedZone = null;
+let currentQuestion = null;
+
 // Get all zone cards
 const zoneCards = document.querySelectorAll('.zone-card');
+const homeView = document.querySelector('.home-view');
 
 // Add click event listeners to zone cards
 zoneCards.forEach(card => {
@@ -12,8 +19,179 @@ zoneCards.forEach(card => {
         const zoneName = card.dataset.zone;
         console.log(`Zone clicked: ${zoneName}`);
 
-        // Future: Navigate to zone detail view
+        // Capitalize zone name to match data
+        selectedZone = zoneName.charAt(0).toUpperCase() + zoneName.slice(1);
+        showZoneQuestions(selectedZone);
     });
 });
+
+// Show questions for a specific zone
+function showZoneQuestions(zone) {
+    // Filter questions by zone
+    const zoneQuestions = QUESTIONS.filter(q => q.zone === zone);
+
+    // Remove existing question list if any
+    const existingList = document.querySelector('.question-list');
+    if (existingList) {
+        existingList.remove();
+    }
+
+    // Create question list container
+    const questionList = document.createElement('div');
+    questionList.className = 'question-list';
+
+    const heading = document.createElement('h2');
+    heading.textContent = `${zone} Questions`;
+    heading.style.marginTop = '2rem';
+    heading.style.marginBottom = '1rem';
+    questionList.appendChild(heading);
+
+    // Create list of questions
+    const list = document.createElement('ul');
+    list.style.listStyle = 'none';
+    list.style.padding = '0';
+
+    zoneQuestions.forEach((question, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${index + 1}. ${question.question}`;
+        listItem.style.padding = '1rem';
+        listItem.style.marginBottom = '0.5rem';
+        listItem.style.backgroundColor = '#f0f0f0';
+        listItem.style.borderRadius = '8px';
+        listItem.style.cursor = 'pointer';
+        listItem.style.transition = 'background-color 0.2s';
+
+        listItem.addEventListener('mouseenter', () => {
+            listItem.style.backgroundColor = '#e0e0e0';
+        });
+
+        listItem.addEventListener('mouseleave', () => {
+            listItem.style.backgroundColor = '#f0f0f0';
+        });
+
+        listItem.addEventListener('click', () => {
+            showQuestionView(question);
+        });
+
+        list.appendChild(listItem);
+    });
+
+    questionList.appendChild(list);
+
+    // Add back button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back to Home';
+    backButton.style.marginTop = '1rem';
+    backButton.style.padding = '0.5rem 1rem';
+    backButton.style.backgroundColor = '#007bff';
+    backButton.style.color = 'white';
+    backButton.style.border = 'none';
+    backButton.style.borderRadius = '4px';
+    backButton.style.cursor = 'pointer';
+
+    backButton.addEventListener('click', () => {
+        questionList.remove();
+        currentView = 'home';
+    });
+
+    questionList.appendChild(backButton);
+
+    // Append to home view
+    homeView.appendChild(questionList);
+    currentView = 'zone-questions';
+}
+
+// Show question detail view
+function showQuestionView(question) {
+    currentQuestion = question;
+
+    // Hide home view content
+    homeView.style.display = 'none';
+
+    // Create question view
+    const questionView = document.createElement('div');
+    questionView.className = 'question-view';
+    questionView.style.padding = '2rem';
+    questionView.style.maxWidth = '600px';
+    questionView.style.margin = '0 auto';
+
+    // Question text
+    const questionText = document.createElement('h2');
+    questionText.textContent = question.question;
+    questionText.style.marginBottom = '2rem';
+    questionView.appendChild(questionText);
+
+    // Answer choices
+    const choicesContainer = document.createElement('div');
+    choicesContainer.className = 'choices-container';
+    choicesContainer.style.display = 'flex';
+    choicesContainer.style.flexDirection = 'column';
+    choicesContainer.style.gap = '1rem';
+
+    question.choices.forEach((choice, index) => {
+        const choiceButton = document.createElement('button');
+        choiceButton.textContent = choice;
+        choiceButton.style.padding = '1rem';
+        choiceButton.style.fontSize = '1rem';
+        choiceButton.style.backgroundColor = '#f8f9fa';
+        choiceButton.style.border = '2px solid #dee2e6';
+        choiceButton.style.borderRadius = '8px';
+        choiceButton.style.cursor = 'pointer';
+        choiceButton.style.textAlign = 'left';
+        choiceButton.style.transition = 'all 0.2s';
+
+        choiceButton.addEventListener('mouseenter', () => {
+            choiceButton.style.backgroundColor = '#e9ecef';
+            choiceButton.style.borderColor = '#adb5bd';
+        });
+
+        choiceButton.addEventListener('mouseleave', () => {
+            choiceButton.style.backgroundColor = '#f8f9fa';
+            choiceButton.style.borderColor = '#dee2e6';
+        });
+
+        choiceButton.addEventListener('click', () => {
+            handleAnswerSelection(index);
+        });
+
+        choicesContainer.appendChild(choiceButton);
+    });
+
+    questionView.appendChild(choicesContainer);
+
+    // Back button
+    const backButton = document.createElement('button');
+    backButton.textContent = 'Back to Questions';
+    backButton.style.marginTop = '2rem';
+    backButton.style.padding = '0.5rem 1rem';
+    backButton.style.backgroundColor = '#6c757d';
+    backButton.style.color = 'white';
+    backButton.style.border = 'none';
+    backButton.style.borderRadius = '4px';
+    backButton.style.cursor = 'pointer';
+
+    backButton.addEventListener('click', () => {
+        questionView.remove();
+        homeView.style.display = 'block';
+        currentView = 'zone-questions';
+    });
+
+    questionView.appendChild(backButton);
+
+    // Add to page (append to body, not to main which is hidden)
+    document.body.appendChild(questionView);
+    currentView = 'question';
+}
+
+// Handle answer selection
+function handleAnswerSelection(selectedIndex) {
+    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+
+    if (isCorrect) {
+        alert(`Correct! ✓\n\n${currentQuestion.explanation}`);
+    } else {
+        alert(`Incorrect. ✗\n\nThe correct answer was: "${currentQuestion.choices[currentQuestion.correctIndex]}"\n\n${currentQuestion.explanation}`);
+    }
+}
 
 console.log(`Loaded ${zoneCards.length} zone cards`);
