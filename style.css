@@ -239,6 +239,184 @@ body {
     z-index: 100;
 }
 
+/* Zone Question Sections */
+.zone-questions-section {
+    padding: 2rem 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 80vh;
+    background-color: #f5f5f5;
+}
+
+.zone-questions-container {
+    background-color: white;
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.zone-questions-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px solid;
+    transition: all 0.3s ease;
+}
+
+/* Zone-specific title colors */
+.zone-questions-title[data-zone="sleep"] {
+    color: #203B73;
+    border-bottom-color: #203B73;
+}
+
+.zone-questions-title[data-zone="stress"] {
+    color: #8B5A7D;
+    border-bottom-color: #8B5A7D;
+}
+
+.zone-questions-title[data-zone="nutrition"] {
+    color: #2D7A3E;
+    border-bottom-color: #2D7A3E;
+}
+
+.zone-questions-title[data-zone="movement"] {
+    color: #E67E22;
+    border-bottom-color: #E67E22;
+}
+
+.zone-questions-title[data-zone="hydration"] {
+    color: #3498DB;
+    border-bottom-color: #3498DB;
+}
+
+.zone-questions-title[data-zone="mindset"] {
+    color: #F39C12;
+    border-bottom-color: #F39C12;
+}
+
+.zone-questions-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.zone-question-item {
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.05rem;
+    border-left: 4px solid #dee2e6;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.zone-question-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #fff;
+}
+
+.zone-question-item:active {
+    transform: translateY(0);
+}
+
+/* Zone-specific question item styling */
+#sleep-questions .zone-question-item {
+    border-left-color: #203B73;
+}
+
+#sleep-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(32, 59, 115, 0.08), white);
+}
+
+#stress-questions .zone-question-item {
+    border-left-color: #8B5A7D;
+}
+
+#stress-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(139, 90, 125, 0.08), white);
+}
+
+#nutrition-questions .zone-question-item {
+    border-left-color: #2D7A3E;
+}
+
+#nutrition-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(45, 122, 62, 0.08), white);
+}
+
+#movement-questions .zone-question-item {
+    border-left-color: #E67E22;
+}
+
+#movement-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(230, 126, 34, 0.08), white);
+}
+
+#hydration-questions .zone-question-item {
+    border-left-color: #3498DB;
+}
+
+#hydration-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(52, 152, 219, 0.08), white);
+}
+
+#mindset-questions .zone-question-item {
+    border-left-color: #F39C12;
+}
+
+#mindset-questions .zone-question-item:hover {
+    background: linear-gradient(to right, rgba(243, 156, 18, 0.08), white);
+}
+
+.back-to-home-button {
+    padding: 0.9rem 1.8rem;
+    background-color: #203B73;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    width: 100%;
+}
+
+.back-to-home-button:hover {
+    background-color: #142749;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.back-to-home-button:active {
+    transform: translateY(0);
+}
+
+/* Highlight Flash Animation */
+@keyframes highlightFlash {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+        text-shadow: 0 0 20px currentColor;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.highlight-flash {
+    animation: highlightFlash 0.8s ease-in-out;
+}
+
 /* Question List Styling */
 .question-list {
     padding: 1rem;
