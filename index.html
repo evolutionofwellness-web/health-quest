@@ -71,11 +71,7 @@
     <section id="sleep-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="sleep">Sleep Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="sleep-1">What is the recommended amount of sleep for most adults?</li>
-                <li class="zone-question-item" data-question-id="sleep-2">Which of these activities helps improve sleep quality?</li>
-                <li class="zone-question-item" data-question-id="sleep-3">What is sleep debt?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="sleep"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
@@ -83,11 +79,7 @@
     <section id="stress-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="stress">Stress Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="stress-1">Which breathing technique is most effective for reducing immediate stress?</li>
-                <li class="zone-question-item" data-question-id="stress-2">What is the "fight or flight" response?</li>
-                <li class="zone-question-item" data-question-id="stress-3">Which activity is proven to reduce stress levels?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="stress"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
@@ -95,11 +87,7 @@
     <section id="nutrition-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="nutrition">Nutrition Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="nutrition-1">What are macronutrients?</li>
-                <li class="zone-question-item" data-question-id="nutrition-2">Why is fiber important in your diet?</li>
-                <li class="zone-question-item" data-question-id="nutrition-3">What is a balanced plate?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="nutrition"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
@@ -107,11 +95,7 @@
     <section id="movement-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="movement">Movement Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="movement-1">How much moderate exercise do adults need per week?</li>
-                <li class="zone-question-item" data-question-id="movement-2">What is the benefit of strength training?</li>
-                <li class="zone-question-item" data-question-id="movement-3">Why is stretching important?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="movement"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
@@ -119,11 +103,7 @@
     <section id="hydration-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="hydration">Hydration Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="hydration-1">What percentage of the human body is water?</li>
-                <li class="zone-question-item" data-question-id="hydration-2">Which is a sign of dehydration?</li>
-                <li class="zone-question-item" data-question-id="hydration-3">When should you drink water?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="hydration"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
@@ -131,14 +111,21 @@
     <section id="mindset-questions" class="zone-questions-section">
         <div class="zone-questions-container">
             <h2 class="zone-questions-title" data-zone="mindset">Mindset Questions</h2>
-            <ul class="zone-questions-list">
-                <li class="zone-question-item" data-question-id="mindset-1">What is a growth mindset?</li>
-                <li class="zone-question-item" data-question-id="mindset-2">What is mindfulness?</li>
-                <li class="zone-question-item" data-question-id="mindset-3">Why is gratitude practice beneficial?</li>
-            </ul>
+            <div class="zone-question-list" data-zone="mindset"></div>
             <button class="back-to-home-button">Back to Home</button>
         </div>
     </section>
+
+    <!-- Question Modal -->
+    <div id="question-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <h3 id="modal-question-text"></h3>
+            <div id="modal-options"></div>
+            <p id="modal-feedback" class="modal-feedback"></p>
+            <button id="modal-close-btn">Close</button>
+        </div>
+    </div>
 
     <footer class="educational-disclaimer">
         For general education only. Not medical advice.
