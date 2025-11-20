@@ -144,6 +144,20 @@ function updateProgressDisplay() {
     });
 }
 
+// Function to animate XP increase
+function animateXPIncrease() {
+    const xpElement = document.getElementById('total-xp');
+    if (xpElement) {
+        // Add animation class
+        xpElement.classList.add('xp-animate');
+
+        // Remove animation class after animation completes
+        setTimeout(() => {
+            xpElement.classList.remove('xp-animate');
+        }, 600);
+    }
+}
+
 // Initialize progress display on load
 updateProgressDisplay();
 
@@ -176,32 +190,15 @@ function showZoneQuestions(zone) {
 
     const heading = document.createElement('h2');
     heading.textContent = `${zone} Questions`;
-    heading.style.marginTop = '2rem';
-    heading.style.marginBottom = '1rem';
     questionList.appendChild(heading);
 
     // Create list of questions
     const list = document.createElement('ul');
-    list.style.listStyle = 'none';
-    list.style.padding = '0';
 
     zoneQuestions.forEach((question, index) => {
         const listItem = document.createElement('li');
         listItem.textContent = `${index + 1}. ${question.question}`;
-        listItem.style.padding = '1rem';
-        listItem.style.marginBottom = '0.5rem';
-        listItem.style.backgroundColor = '#f0f0f0';
-        listItem.style.borderRadius = '8px';
-        listItem.style.cursor = 'pointer';
-        listItem.style.transition = 'background-color 0.2s';
-
-        listItem.addEventListener('mouseenter', () => {
-            listItem.style.backgroundColor = '#e0e0e0';
-        });
-
-        listItem.addEventListener('mouseleave', () => {
-            listItem.style.backgroundColor = '#f0f0f0';
-        });
+        listItem.className = `question-item zone-${zone.toLowerCase()}`;
 
         listItem.addEventListener('click', () => {
             showQuestionView(question);
@@ -215,13 +212,7 @@ function showZoneQuestions(zone) {
     // Add back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back to Home';
-    backButton.style.marginTop = '1rem';
-    backButton.style.padding = '0.5rem 1rem';
-    backButton.style.backgroundColor = '#007bff';
-    backButton.style.color = 'white';
-    backButton.style.border = 'none';
-    backButton.style.borderRadius = '4px';
-    backButton.style.cursor = 'pointer';
+    backButton.className = 'back-button';
 
     backButton.addEventListener('click', () => {
         questionList.remove();
@@ -245,44 +236,20 @@ function showQuestionView(question) {
     // Create question view
     const questionView = document.createElement('div');
     questionView.className = 'question-view';
-    questionView.style.padding = '2rem';
-    questionView.style.maxWidth = '600px';
-    questionView.style.margin = '0 auto';
 
     // Question text
     const questionText = document.createElement('h2');
     questionText.textContent = question.question;
-    questionText.style.marginBottom = '2rem';
     questionView.appendChild(questionText);
 
     // Answer choices
     const choicesContainer = document.createElement('div');
     choicesContainer.className = 'choices-container';
-    choicesContainer.style.display = 'flex';
-    choicesContainer.style.flexDirection = 'column';
-    choicesContainer.style.gap = '1rem';
 
     question.choices.forEach((choice, index) => {
         const choiceButton = document.createElement('button');
         choiceButton.textContent = choice;
-        choiceButton.style.padding = '1rem';
-        choiceButton.style.fontSize = '1rem';
-        choiceButton.style.backgroundColor = '#f8f9fa';
-        choiceButton.style.border = '2px solid #dee2e6';
-        choiceButton.style.borderRadius = '8px';
-        choiceButton.style.cursor = 'pointer';
-        choiceButton.style.textAlign = 'left';
-        choiceButton.style.transition = 'all 0.2s';
-
-        choiceButton.addEventListener('mouseenter', () => {
-            choiceButton.style.backgroundColor = '#e9ecef';
-            choiceButton.style.borderColor = '#adb5bd';
-        });
-
-        choiceButton.addEventListener('mouseleave', () => {
-            choiceButton.style.backgroundColor = '#f8f9fa';
-            choiceButton.style.borderColor = '#dee2e6';
-        });
+        choiceButton.className = 'choice-button';
 
         choiceButton.addEventListener('click', () => {
             handleAnswerSelection(index);
@@ -296,13 +263,8 @@ function showQuestionView(question) {
     // Back button
     const backButton = document.createElement('button');
     backButton.textContent = 'Back to Questions';
-    backButton.style.marginTop = '2rem';
-    backButton.style.padding = '0.5rem 1rem';
+    backButton.className = 'back-button';
     backButton.style.backgroundColor = '#6c757d';
-    backButton.style.color = 'white';
-    backButton.style.border = 'none';
-    backButton.style.borderRadius = '4px';
-    backButton.style.cursor = 'pointer';
 
     backButton.addEventListener('click', () => {
         questionView.remove();
@@ -331,10 +293,13 @@ function handleAnswerSelection(selectedIndex) {
             gameState.answeredQuestions.push(currentQuestion.id);
             saveGameState();
 
-            alert(`Correct! +${currentQuestion.xpReward} XP\n\n${currentQuestion.explanation}\n\nTotal XP: ${gameState.totalXP}`);
-
             // Update UI to reflect new progress
             updateProgressDisplay();
+
+            // Animate XP increase
+            animateXPIncrease();
+
+            alert(`Correct! +${currentQuestion.xpReward} XP\n\n${currentQuestion.explanation}\n\nTotal XP: ${gameState.totalXP}`);
         } else {
             saveGameState(); // Save streak update even if question was already answered
             alert(`Correct! (Already completed)\n\n${currentQuestion.explanation}`);
