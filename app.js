@@ -1,90 +1,65 @@
 // Health Quest - Main Application Logic
 import { QUESTIONS } from './data.js';
 
-// Application initialization
-console.log('Health Quest app initialized');
+// ============================================================
+// LOCALSTORAGE KEYS & STATE
+// ============================================================
+const STORAGE_KEYS = {
+    totalXP: 'hq_totalXP',
+    completedQuestions: 'hq_completedQuestions',
+    lastPlayDate: 'hq_lastPlayDate',
+    streak: 'hq_streak',
+    hasSeenOnboarding: 'hasSeenOnboarding'
+};
 
-// Check and show onboarding modal on first visit
-function checkOnboarding() {
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-
-    if (!hasSeenOnboarding) {
-        // Show the onboarding modal
-        const modal = document.getElementById('onboarding-modal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    }
-}
-
-// Handle onboarding modal "Let's start" button
-function initializeOnboarding() {
-    const startButton = document.getElementById('start-button');
-    const modal = document.getElementById('onboarding-modal');
-
-    if (startButton && modal) {
-        startButton.addEventListener('click', () => {
-            // Hide the modal
-            modal.style.display = 'none';
-
-            // Save the flag in localStorage
-            localStorage.setItem('hasSeenOnboarding', 'true');
-            console.log('Onboarding completed and saved');
-        });
-    }
-}
-
-// State management
-let currentView = 'home';
-let selectedZone = null;
-let currentQuestion = null;
-
-// Game progress state with localStorage
 let gameState = {
     totalXP: 0,
-    answeredQuestions: [], // Array of question ids
-    streak: 0, // Daily streak counter
-    lastDate: null // Last date user answered a question (YYYY-MM-DD format)
+    completedQuestions: [],
+    lastPlayDate: null,
+    streak: 0
 };
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+console.log('Health Quest app initialized');
 
 // Load game state from localStorage
 function loadGameState() {
-    const savedState = localStorage.getItem('healthQuestState');
-    if (savedState) {
-        try {
-            gameState = JSON.parse(savedState);
-            console.log('Game state loaded:', gameState);
-        } catch (e) {
-            console.error('Error loading game state:', e);
-            gameState = { totalXP: 0, answeredQuestions: [], streak: 0, lastDate: null };
-        }
-    }
+    gameState.totalXP = parseInt(localStorage.getItem(STORAGE_KEYS.totalXP)) || 0;
+    gameState.completedQuestions = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedQuestions) || '[]');
+    gameState.lastPlayDate = localStorage.getItem(STORAGE_KEYS.lastPlayDate) || null;
+    gameState.streak = parseInt(localStorage.getItem(STORAGE_KEYS.streak)) || 0;
+
+    console.log('Game state loaded:', gameState);
 }
 
 // Save game state to localStorage
 function saveGameState() {
-    try {
-        localStorage.setItem('healthQuestState', JSON.stringify(gameState));
-        console.log('Game state saved:', gameState);
-    } catch (e) {
-        console.error('Error saving game state:', e);
-    }
+    localStorage.setItem(STORAGE_KEYS.totalXP, gameState.totalXP.toString());
+    localStorage.setItem(STORAGE_KEYS.completedQuestions, JSON.stringify(gameState.completedQuestions));
+    localStorage.setItem(STORAGE_KEYS.lastPlayDate, gameState.lastPlayDate || '');
+    localStorage.setItem(STORAGE_KEYS.streak, gameState.streak.toString());
+
+    console.log('Game state saved:', gameState);
 }
 
-// Update daily streak based on the current date
+// ============================================================
+// STREAK LOGIC
+// ============================================================
 function updateStreak() {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-    if (!gameState.lastDate) {
-        // First time answering a question
+    if (!gameState.lastPlayDate) {
+        // First time playing
         gameState.streak = 1;
-        gameState.lastDate = today;
-    } else if (gameState.lastDate === today) {
-        // Already answered today, streak stays the same
+        gameState.lastPlayDate = today;
+    } else if (gameState.lastPlayDate === today) {
+        // Already played today, streak stays the same
         return;
     } else {
         // Calculate days difference
-        const lastDate = new Date(gameState.lastDate);
+        const lastDate = new Date(gameState.lastPlayDate);
         const currentDate = new Date(today);
         const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
 
@@ -95,24 +70,40 @@ function updateStreak() {
             // More than one day, reset streak
             gameState.streak = 1;
         }
-        gameState.lastDate = today;
+        gameState.lastPlayDate = today;
     }
 }
 
-// Load state on app initialization
-loadGameState();
+// ============================================================
+// XP & PROGRESS MANAGEMENT
+// ============================================================
+function awardXP(question) {
+    // Check if this question was already completed
+    if (gameState.completedQuestions.includes(question.id)) {
+        // Already completed - don't award XP again
+        return false;
+    }
 
-// Initialize onboarding modal functionality
-initializeOnboarding();
+    // First time completing - award XP
+    gameState.completedQuestions.push(question.id);
+    gameState.totalXP += question.xpValue;
 
-// Check and show onboarding modal if needed
-checkOnboarding();
+    // Update streak
+    updateStreak();
 
-// Get all zone cards
-const zoneCards = document.querySelectorAll('.zone-card');
-const homeView = document.querySelector('.home-view');
+    // Save state
+    saveGameState();
 
-// Function to update progress display on the home screen
+    // Update UI
+    updateProgressDisplay();
+    animateXPIncrease();
+
+    return true;
+}
+
+// ============================================================
+// UI UPDATE FUNCTIONS
+// ============================================================
 function updateProgressDisplay() {
     // Update total XP display
     const xpElement = document.getElementById('total-xp');
@@ -127,13 +118,13 @@ function updateProgressDisplay() {
     }
 
     // Update each zone card with completion count
+    const zoneCards = document.querySelectorAll('.zone-card');
     zoneCards.forEach(card => {
         const zoneName = card.dataset.zone;
-        const capitalizedZoneName = zoneName.charAt(0).toUpperCase() + zoneName.slice(1);
 
-        // Filter questions by zone
-        const zoneQuestions = QUESTIONS.filter(q => q.zone === capitalizedZoneName);
-        const completedCount = zoneQuestions.filter(q => gameState.answeredQuestions.includes(q.id)).length;
+        // Get questions for this zone
+        const zoneQuestions = QUESTIONS[zoneName] || [];
+        const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
         const totalCount = zoneQuestions.length;
 
         // Update progress text
@@ -144,208 +135,252 @@ function updateProgressDisplay() {
     });
 }
 
-// Function to animate XP increase
 function animateXPIncrease() {
     const xpElement = document.getElementById('total-xp');
     if (xpElement) {
-        // Add animation class
         xpElement.classList.add('xp-animate');
-
-        // Remove animation class after animation completes
         setTimeout(() => {
             xpElement.classList.remove('xp-animate');
         }, 600);
     }
 }
 
-// Initialize progress display on load
-updateProgressDisplay();
+// ============================================================
+// QUESTION TILE RENDERING
+// ============================================================
+function renderQuestionTiles() {
+    // For each zone, render its questions
+    Object.keys(QUESTIONS).forEach(zoneName => {
+        const container = document.querySelector(`.zone-question-list[data-zone="${zoneName}"]`);
+        if (!container) return;
 
-// Add click event listeners to zone cards for smooth scrolling to question sections
-zoneCards.forEach(card => {
-    card.addEventListener('click', (e) => {
-        e.preventDefault();
-        const zoneName = card.dataset.zone;
-        console.log(`Zone clicked: ${zoneName}`);
+        const questions = QUESTIONS[zoneName];
 
-        // Scroll to the corresponding question section
-        const questionSection = document.getElementById(`${zoneName}-questions`);
-        if (questionSection) {
-            questionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Clear existing content
+        container.innerHTML = '';
 
-            // Add highlight animation to the section heading
-            const heading = questionSection.querySelector('.zone-questions-title');
-            if (heading) {
-                heading.classList.add('highlight-flash');
-                setTimeout(() => {
-                    heading.classList.remove('highlight-flash');
-                }, 800);
+        // Render each question as a tile
+        questions.forEach((question, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'question-tile';
+            tile.dataset.questionId = question.id;
+
+            // Check if completed
+            const isCompleted = gameState.completedQuestions.includes(question.id);
+            if (isCompleted) {
+                tile.classList.add('completed');
             }
-        }
-    });
-});
 
-// Add click handlers to "Back to Home" buttons
-const backToHomeButtons = document.querySelectorAll('.back-to-home-button');
-backToHomeButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-        e.preventDefault();
-        // Scroll back to the zone grid at the top
-        const homeView = document.querySelector('.home-view');
-        if (homeView) {
-            homeView.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-});
+            // Build tile HTML
+            tile.innerHTML = `
+                <div class="question-tile-header">
+                    <span class="question-number">Question ${index + 1}</span>
+                    <span class="question-xp">${isCompleted ? 'Completed' : `XP +${question.xpValue}`}</span>
+                </div>
+                <div class="question-preview">${question.text}</div>
+            `;
 
-// Add click handlers to question items in the new sections
-const questionItems = document.querySelectorAll('.zone-question-item');
-questionItems.forEach(item => {
-    item.addEventListener('click', () => {
-        const questionId = item.dataset.questionId;
-        // Find the question in the QUESTIONS array
-        const question = QUESTIONS.find(q => q.id === questionId);
-        if (question) {
-            showQuestionView(question);
-        }
-    });
-});
+            // Add click handler
+            tile.addEventListener('click', () => {
+                openQuestionModal(question);
+            });
 
-// Show questions for a specific zone
-function showZoneQuestions(zone) {
-    // Filter questions by zone
-    const zoneQuestions = QUESTIONS.filter(q => q.zone === zone);
-
-    // Remove existing question list if any
-    const existingList = document.querySelector('.question-list');
-    if (existingList) {
-        existingList.remove();
-    }
-
-    // Create question list container
-    const questionList = document.createElement('div');
-    questionList.className = 'question-list';
-
-    const heading = document.createElement('h2');
-    heading.textContent = `${zone} Questions`;
-    questionList.appendChild(heading);
-
-    // Create list of questions
-    const list = document.createElement('ul');
-
-    zoneQuestions.forEach((question, index) => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${index + 1}. ${question.question}`;
-        listItem.className = `question-item zone-${zone.toLowerCase()}`;
-
-        listItem.addEventListener('click', () => {
-            showQuestionView(question);
+            container.appendChild(tile);
         });
-
-        list.appendChild(listItem);
     });
-
-    questionList.appendChild(list);
-
-    // Add back button
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back to Home';
-    backButton.className = 'back-button';
-
-    backButton.addEventListener('click', () => {
-        questionList.remove();
-        currentView = 'home';
-    });
-
-    questionList.appendChild(backButton);
-
-    // Append to home view
-    homeView.appendChild(questionList);
-    currentView = 'zone-questions';
 }
 
-// Show question detail view
-function showQuestionView(question) {
+// ============================================================
+// MODAL LOGIC
+// ============================================================
+let currentQuestion = null;
+
+function openQuestionModal(question) {
     currentQuestion = question;
 
-    // Hide home view content
-    homeView.style.display = 'none';
+    const modal = document.getElementById('question-modal');
+    const questionText = document.getElementById('modal-question-text');
+    const optionsContainer = document.getElementById('modal-options');
+    const feedbackElement = document.getElementById('modal-feedback');
 
-    // Create question view
-    const questionView = document.createElement('div');
-    questionView.className = 'question-view';
+    // Set question text
+    questionText.textContent = question.text;
 
-    // Question text
-    const questionText = document.createElement('h2');
-    questionText.textContent = question.question;
-    questionView.appendChild(questionText);
+    // Clear previous options and feedback
+    optionsContainer.innerHTML = '';
+    feedbackElement.textContent = '';
+    feedbackElement.className = 'modal-feedback';
 
-    // Answer choices
-    const choicesContainer = document.createElement('div');
-    choicesContainer.className = 'choices-container';
+    // Render options
+    question.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'modal-option-btn';
+        btn.textContent = option;
+        btn.dataset.optionIndex = index;
 
-    question.choices.forEach((choice, index) => {
-        const choiceButton = document.createElement('button');
-        choiceButton.textContent = choice;
-        choiceButton.className = 'choice-button';
-
-        choiceButton.addEventListener('click', () => {
+        btn.addEventListener('click', () => {
             handleAnswerSelection(index);
         });
 
-        choicesContainer.appendChild(choiceButton);
+        optionsContainer.appendChild(btn);
     });
 
-    questionView.appendChild(choicesContainer);
-
-    // Back button
-    const backButton = document.createElement('button');
-    backButton.textContent = 'Back to Questions';
-    backButton.className = 'back-button';
-    backButton.style.backgroundColor = '#6c757d';
-
-    backButton.addEventListener('click', () => {
-        questionView.remove();
-        homeView.style.display = 'block';
-        currentView = 'zone-questions';
-    });
-
-    questionView.appendChild(backButton);
-
-    // Add to page (append to body, not to main which is hidden)
-    document.body.appendChild(questionView);
-    currentView = 'question';
+    // Show modal
+    modal.classList.remove('hidden');
 }
 
-// Handle answer selection
+function closeQuestionModal() {
+    const modal = document.getElementById('question-modal');
+    modal.classList.add('hidden');
+    currentQuestion = null;
+
+    // Re-render tiles to reflect any changes
+    renderQuestionTiles();
+}
+
 function handleAnswerSelection(selectedIndex) {
+    if (!currentQuestion) return;
+
     const isCorrect = selectedIndex === currentQuestion.correctIndex;
+    const feedbackElement = document.getElementById('modal-feedback');
+    const optionButtons = document.querySelectorAll('.modal-option-btn');
+
+    // Disable all buttons after selection
+    optionButtons.forEach(btn => {
+        btn.disabled = true;
+    });
+
+    // Highlight selected answer
+    optionButtons[selectedIndex].classList.add(isCorrect ? 'correct' : 'incorrect');
 
     if (isCorrect) {
-        // Update streak whenever a correct answer is given
-        updateStreak();
+        // Show correct feedback
+        const wasNewCompletion = awardXP(currentQuestion);
 
-        // Award XP only if this question hasn't been answered before
-        if (!gameState.answeredQuestions.includes(currentQuestion.id)) {
-            gameState.totalXP += currentQuestion.xpReward;
-            gameState.answeredQuestions.push(currentQuestion.id);
-            saveGameState();
-
-            // Update UI to reflect new progress
-            updateProgressDisplay();
-
-            // Animate XP increase
-            animateXPIncrease();
-
-            alert(`Correct! +${currentQuestion.xpReward} XP\n\n${currentQuestion.explanation}\n\nTotal XP: ${gameState.totalXP}`);
+        if (wasNewCompletion) {
+            feedbackElement.textContent = `Correct! +${currentQuestion.xpValue} XP\n\n${currentQuestion.explanation}`;
+            feedbackElement.className = 'modal-feedback correct';
         } else {
-            saveGameState(); // Save streak update even if question was already answered
-            alert(`Correct! (Already completed)\n\n${currentQuestion.explanation}`);
-            updateProgressDisplay(); // Update to show new streak
+            feedbackElement.textContent = `Correct! (Already completed)\n\n${currentQuestion.explanation}`;
+            feedbackElement.className = 'modal-feedback correct';
         }
     } else {
-        alert(`Incorrect. ✗\n\nThe correct answer was: "${currentQuestion.choices[currentQuestion.correctIndex]}"\n\n${currentQuestion.explanation}`);
+        // Show incorrect feedback
+        const correctAnswer = currentQuestion.options[currentQuestion.correctIndex];
+        feedbackElement.textContent = `Not quite. The right answer is: "${correctAnswer}"\n\n${currentQuestion.explanation}`;
+        feedbackElement.className = 'modal-feedback incorrect';
+
+        // Also highlight the correct answer
+        optionButtons[currentQuestion.correctIndex].classList.add('correct');
     }
 }
 
-console.log(`Loaded ${zoneCards.length} zone cards`);
+// ============================================================
+// ONBOARDING MODAL
+// ============================================================
+function checkOnboarding() {
+    const hasSeenOnboarding = localStorage.getItem(STORAGE_KEYS.hasSeenOnboarding);
+
+    if (!hasSeenOnboarding) {
+        const modal = document.getElementById('onboarding-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+}
+
+function initializeOnboarding() {
+    const startButton = document.getElementById('start-button');
+    const modal = document.getElementById('onboarding-modal');
+
+    if (startButton && modal) {
+        startButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+            localStorage.setItem(STORAGE_KEYS.hasSeenOnboarding, 'true');
+            console.log('Onboarding completed');
+        });
+    }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function initializeNavigation() {
+    // Zone cards - scroll to questions
+    const zoneCards = document.querySelectorAll('.zone-card');
+    zoneCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            e.preventDefault();
+            const zoneName = card.dataset.zone;
+            console.log(`Zone clicked: ${zoneName}`);
+
+            const questionSection = document.getElementById(`${zoneName}-questions`);
+            if (questionSection) {
+                questionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                // Add highlight animation
+                const heading = questionSection.querySelector('.zone-questions-title');
+                if (heading) {
+                    heading.classList.add('highlight-flash');
+                    setTimeout(() => {
+                        heading.classList.remove('highlight-flash');
+                    }, 800);
+                }
+            }
+        });
+    });
+
+    // Back to home buttons
+    const backButtons = document.querySelectorAll('.back-to-home-button');
+    backButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const homeView = document.querySelector('.home-view');
+            if (homeView) {
+                homeView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // Modal close button
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', closeQuestionModal);
+    }
+
+    // Modal backdrop (click to close)
+    const modalBackdrop = document.querySelector('.modal-backdrop');
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', closeQuestionModal);
+    }
+}
+
+// ============================================================
+// APP INITIALIZATION
+// ============================================================
+function initializeApp() {
+    // Load saved state
+    loadGameState();
+
+    // Initialize onboarding
+    initializeOnboarding();
+    checkOnboarding();
+
+    // Render question tiles
+    renderQuestionTiles();
+
+    // Update all UI elements
+    updateProgressDisplay();
+
+    // Set up navigation
+    initializeNavigation();
+
+    console.log('App initialization complete');
+}
+
+// Start the app when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
