@@ -1124,3 +1124,357 @@ body {
     border-radius: 8px;
     margin: 1rem 0;
 }
+
+/* ============================================================ */
+/* ACHIEVEMENTS SECTION */
+/* ============================================================ */
+.achievements-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 1.5rem 0;
+    overflow: hidden;
+}
+
+.achievements-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+    transition: background-color 0.2s ease;
+}
+
+.achievements-header:hover {
+    background-color: #e9ecef;
+}
+
+.achievements-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #203B73;
+    margin: 0;
+}
+
+.achievements-count {
+    font-size: 1rem;
+    color: #FFD700;
+    margin-left: 0.5rem;
+}
+
+.toggle-icon {
+    font-size: 1.2rem;
+    color: #666;
+    transition: transform 0.3s ease;
+}
+
+.achievements-content {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.achievements-content.collapsed {
+    max-height: 0;
+}
+
+.achievements-list {
+    padding: 1rem;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.achievement-item.unlocked {
+    border-left-color: #FFD700;
+    background: linear-gradient(to right, rgba(255, 215, 0, 0.1), #f8f9fa);
+}
+
+.achievement-item.locked {
+    opacity: 0.6;
+}
+
+.achievement-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #203B73;
+    margin-bottom: 0.25rem;
+}
+
+.achievement-description {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+/* Achievement Toast Notification */
+.achievement-toast {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    z-index: 1000;
+    min-width: 300px;
+    max-width: 90%;
+    transition: transform 0.3s ease;
+}
+
+.achievement-toast.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+.achievement-toast-icon {
+    font-size: 2.5rem;
+}
+
+.achievement-toast-content {
+    flex: 1;
+}
+
+.achievement-toast-title {
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+.achievement-toast-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* ============================================================ */
+/* WEEKLY BOSS BUTTON */
+/* ============================================================ */
+.weekly-boss-button {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    margin: 1.5rem auto;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #8B5A7D, #6B4A5D);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(139, 90, 125, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+}
+
+.weekly-boss-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 90, 125, 0.4);
+}
+
+.weekly-boss-button:active {
+    transform: translateY(0);
+}
+
+.boss-icon {
+    font-size: 1.5rem;
+}
+
+.boss-text {
+    font-size: 1.2rem;
+}
+
+/* Weekly Boss Modal */
+.boss-modal-content {
+    background-color: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.boss-modal-content-inner {
+    padding: 2rem;
+}
+
+.boss-progress {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+#boss-question-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #203B73;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+#boss-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.boss-option-btn {
+    padding: 1rem 1.5rem;
+    background-color: white;
+    color: #203B73;
+    border: 2px solid #8B5A7D;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.boss-option-btn:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    transform: translateX(4px);
+}
+
+.boss-option-btn:disabled {
+    cursor: not-allowed;
+}
+
+.boss-option-btn.correct {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.boss-option-btn.incorrect {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.boss-feedback {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+.boss-feedback.correct {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.boss-feedback.incorrect {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+/* Boss Completion Screen */
+.boss-completion-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #203B73;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.boss-score {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.boss-score-number {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #8B5A7D;
+}
+
+.boss-score-label {
+    font-size: 1.1rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.boss-reward {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border-radius: 12px;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.boss-reward-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.boss-reward-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.boss-badge {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.boss-close-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: #203B73;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.boss-close-button:hover {
+    background-color: #172a52;
+    transform: translateY(-2px);
+}
+
+.boss-close-button:active {
+    transform: translateY(0);
+}
+

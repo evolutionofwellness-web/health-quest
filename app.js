@@ -16,7 +16,10 @@ const STORAGE_KEYS = {
     completedNodes: 'hq_completedNodes',
     dailyQuestDate: 'hq_dailyQuestDate',
     dailyQuestTiles: 'hq_dailyQuestTiles',
-    completedTiles: 'hq_completedTiles'
+    completedTiles: 'hq_completedTiles',
+    unlockedAchievements: 'hq_unlockedAchievements',
+    playDates: 'hq_playDates',
+    weeklyBossDate: 'hq_weeklyBossDate'
 };
 
 let gameState = {
@@ -43,6 +46,51 @@ let todayProgress = {
 };
 
 // ============================================================
+// ACHIEVEMENTS SYSTEM
+// ============================================================
+const ACHIEVEMENTS = {
+    sleepRookie: {
+        id: 'sleepRookie',
+        name: 'Sleep Rookie',
+        description: 'Complete 3 sleep tiles',
+        icon: '😴',
+        checkUnlock: () => {
+            const sleepTiles = QUESTIONS['sleep'] || [];
+            const completedSleepCount = sleepTiles.filter(q => gameState.completedTiles.includes(q.id)).length;
+            return completedSleepCount >= 3;
+        }
+    },
+    hydrationHero: {
+        id: 'hydrationHero',
+        name: 'Hydration Hero',
+        description: 'Complete 10 hydration tiles',
+        icon: '💦',
+        checkUnlock: () => {
+            const hydrationTiles = QUESTIONS['hydration'] || [];
+            const completedHydrationCount = hydrationTiles.filter(q => gameState.completedTiles.includes(q.id)).length;
+            return completedHydrationCount >= 10;
+        }
+    },
+    sevenDayStreak: {
+        id: 'sevenDayStreak',
+        name: 'Seven Day Streak',
+        description: 'Reach a 7-day daily streak',
+        icon: '🔥',
+        checkUnlock: () => gameState.streak >= 7
+    },
+    firstMapClear: {
+        id: 'firstMapClear',
+        name: 'First Map Clear',
+        description: 'Clear all 10 nodes',
+        icon: '🏆',
+        checkUnlock: () => gameState.completedNodes.length >= 10
+    }
+};
+
+let unlockedAchievements = [];
+let playDates = []; // Track unique play dates for weekly boss eligibility
+
+// ============================================================
 // INITIALIZATION
 // ============================================================
 console.log('Health Quest app initialized');
@@ -57,6 +105,12 @@ function loadGameState() {
     gameState.completedNodes = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedNodes) || '[]');
     gameState.completedTiles = JSON.parse(localStorage.getItem(STORAGE_KEYS.completedTiles) || '[]');
 
+    // Load achievements
+    unlockedAchievements = JSON.parse(localStorage.getItem(STORAGE_KEYS.unlockedAchievements) || '[]');
+
+    // Load play dates
+    playDates = JSON.parse(localStorage.getItem(STORAGE_KEYS.playDates) || '[]');
+
     // Calculate current level
     gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
 
@@ -65,6 +119,9 @@ function loadGameState() {
 
     // Load or initialize daily quest
     loadDailyQuest();
+
+    // Track today as a play date
+    trackPlayDate();
 
     console.log('Game state loaded:', gameState);
 }
@@ -78,6 +135,12 @@ function saveGameState() {
     localStorage.setItem(STORAGE_KEYS.currentNodeIndex, gameState.currentNodeIndex.toString());
     localStorage.setItem(STORAGE_KEYS.completedNodes, JSON.stringify(gameState.completedNodes));
     localStorage.setItem(STORAGE_KEYS.completedTiles, JSON.stringify(gameState.completedTiles));
+
+    // Save achievements
+    localStorage.setItem(STORAGE_KEYS.unlockedAchievements, JSON.stringify(unlockedAchievements));
+
+    // Save play dates
+    localStorage.setItem(STORAGE_KEYS.playDates, JSON.stringify(playDates));
 
     // Save today's progress
     saveTodayProgress();
@@ -113,6 +176,295 @@ function saveTodayProgress() {
     const today = new Date().toISOString().split('T')[0];
     todayProgress.date = today;
     localStorage.setItem(STORAGE_KEYS.todayHistory, JSON.stringify(todayProgress));
+}
+
+// ============================================================
+// PLAY DATE TRACKING FOR WEEKLY BOSS
+// ============================================================
+function trackPlayDate() {
+    const today = new Date().toISOString().split('T')[0];
+    if (!playDates.includes(today)) {
+        playDates.push(today);
+        // Keep only last 30 days for efficiency
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        playDates = playDates.filter(date => new Date(date) >= thirtyDaysAgo);
+        localStorage.setItem(STORAGE_KEYS.playDates, JSON.stringify(playDates));
+    }
+}
+
+function getUniqueDaysInLastWeek() {
+    const today = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    return playDates.filter(date => {
+        const playDate = new Date(date);
+        return playDate >= sevenDaysAgo && playDate <= today;
+    }).length;
+}
+
+// ============================================================
+// ACHIEVEMENTS SYSTEM FUNCTIONS
+// ============================================================
+function checkAchievements() {
+    let newlyUnlocked = [];
+
+    Object.values(ACHIEVEMENTS).forEach(achievement => {
+        // Skip if already unlocked
+        if (unlockedAchievements.includes(achievement.id)) {
+            return;
+        }
+
+        // Check if criteria met
+        if (achievement.checkUnlock()) {
+            unlockedAchievements.push(achievement.id);
+            newlyUnlocked.push(achievement);
+        }
+    });
+
+    // Save if any new achievements unlocked
+    if (newlyUnlocked.length > 0) {
+        localStorage.setItem(STORAGE_KEYS.unlockedAchievements, JSON.stringify(unlockedAchievements));
+
+        // Show toast for each new achievement
+        newlyUnlocked.forEach(achievement => {
+            showAchievementToast(achievement);
+        });
+
+        // Update achievements UI
+        updateAchievementsDisplay();
+    }
+}
+
+function showAchievementToast(achievement) {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    toast.innerHTML = `
+        <div class="achievement-toast-icon">${achievement.icon}</div>
+        <div class="achievement-toast-content">
+            <div class="achievement-toast-title">Achievement Unlocked!</div>
+            <div class="achievement-toast-name">${achievement.name}</div>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 100);
+
+    // Remove after 4 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+function updateAchievementsDisplay() {
+    const container = document.getElementById('achievements-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    Object.values(ACHIEVEMENTS).forEach(achievement => {
+        const isUnlocked = unlockedAchievements.includes(achievement.id);
+
+        const item = document.createElement('div');
+        item.className = `achievement-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+        item.innerHTML = `
+            <div class="achievement-icon">${isUnlocked ? achievement.icon : '🔒'}</div>
+            <div class="achievement-info">
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="achievement-description">${achievement.description}</div>
+            </div>
+        `;
+
+        container.appendChild(item);
+    });
+
+    // Update achievement count
+    const countElement = document.getElementById('achievements-count');
+    if (countElement) {
+        const total = Object.keys(ACHIEVEMENTS).length;
+        countElement.textContent = `${unlockedAchievements.length} / ${total}`;
+    }
+}
+
+// ============================================================
+// WEEKLY BOSS QUIZ
+// ============================================================
+let weeklyBossQuiz = {
+    questions: [],
+    currentQuestionIndex: 0,
+    correctAnswers: 0,
+    isActive: false
+};
+
+function isWeeklyBossAvailable() {
+    const uniqueDays = getUniqueDaysInLastWeek();
+    return uniqueDays >= 5;
+}
+
+function hasCompletedWeeklyBossThisWeek() {
+    const lastCompletedDate = localStorage.getItem(STORAGE_KEYS.weeklyBossDate);
+    if (!lastCompletedDate) return false;
+
+    const today = new Date();
+    const lastCompleted = new Date(lastCompletedDate);
+    const daysSince = Math.floor((today - lastCompleted) / (1000 * 60 * 60 * 24));
+
+    return daysSince < 7;
+}
+
+function updateWeeklyBossButton() {
+    const button = document.getElementById('weekly-boss-button');
+    if (!button) return;
+
+    const isAvailable = isWeeklyBossAvailable();
+    const hasCompleted = hasCompletedWeeklyBossThisWeek();
+
+    if (isAvailable && !hasCompleted) {
+        button.style.display = 'block';
+        button.disabled = false;
+    } else {
+        button.style.display = 'none';
+    }
+}
+
+function startWeeklyBoss() {
+    // Generate 5 random questions from any category
+    const allQuestions = [];
+    Object.values(QUESTIONS).forEach(zoneQuestions => {
+        allQuestions.push(...zoneQuestions);
+    });
+
+    // Shuffle and select 5
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    weeklyBossQuiz.questions = shuffled.slice(0, 5);
+    weeklyBossQuiz.currentQuestionIndex = 0;
+    weeklyBossQuiz.correctAnswers = 0;
+    weeklyBossQuiz.isActive = true;
+
+    // Show weekly boss modal
+    showWeeklyBossQuestion();
+}
+
+function showWeeklyBossQuestion() {
+    const modal = document.getElementById('weekly-boss-modal');
+    const questionText = document.getElementById('boss-question-text');
+    const optionsContainer = document.getElementById('boss-options');
+    const feedbackElement = document.getElementById('boss-feedback');
+    const progressElement = document.getElementById('boss-progress');
+
+    const currentQuestion = weeklyBossQuiz.questions[weeklyBossQuiz.currentQuestionIndex];
+
+    // Update progress
+    progressElement.textContent = `Question ${weeklyBossQuiz.currentQuestionIndex + 1} of 5`;
+
+    // Set question text
+    questionText.textContent = currentQuestion.text;
+
+    // Clear previous options and feedback
+    optionsContainer.innerHTML = '';
+    feedbackElement.textContent = '';
+    feedbackElement.className = 'boss-feedback';
+
+    // Render options
+    currentQuestion.options.forEach((option, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'boss-option-btn';
+        btn.textContent = option;
+        btn.dataset.optionIndex = index;
+
+        btn.addEventListener('click', () => {
+            handleBossAnswer(index, btn);
+        });
+
+        optionsContainer.appendChild(btn);
+    });
+
+    // Show modal
+    modal.classList.remove('hidden');
+}
+
+function handleBossAnswer(selectedIndex, selectedButton) {
+    const currentQuestion = weeklyBossQuiz.questions[weeklyBossQuiz.currentQuestionIndex];
+    const isCorrect = selectedIndex === currentQuestion.correctIndex;
+    const feedbackElement = document.getElementById('boss-feedback');
+    const optionButtons = document.querySelectorAll('.boss-option-btn');
+
+    // Disable all buttons
+    optionButtons.forEach(btn => btn.disabled = true);
+
+    // Highlight answers
+    selectedButton.classList.add(isCorrect ? 'correct' : 'incorrect');
+    if (!isCorrect) {
+        optionButtons[currentQuestion.correctIndex].classList.add('correct');
+    }
+
+    if (isCorrect) {
+        weeklyBossQuiz.correctAnswers++;
+        feedbackElement.textContent = 'Correct!';
+        feedbackElement.className = 'boss-feedback correct';
+    } else {
+        feedbackElement.textContent = `Wrong. The answer is: ${currentQuestion.options[currentQuestion.correctIndex]}`;
+        feedbackElement.className = 'boss-feedback incorrect';
+    }
+
+    // Show next button after 1.5 seconds
+    setTimeout(() => {
+        weeklyBossQuiz.currentQuestionIndex++;
+
+        if (weeklyBossQuiz.currentQuestionIndex < 5) {
+            // Show next question
+            showWeeklyBossQuestion();
+        } else {
+            // Show completion
+            showWeeklyBossCompletion();
+        }
+    }, 1500);
+}
+
+function showWeeklyBossCompletion() {
+    const modal = document.getElementById('weekly-boss-modal');
+    const content = modal.querySelector('.boss-modal-content-inner');
+
+    const score = weeklyBossQuiz.correctAnswers;
+    const bonusXP = score * 20; // 20 XP per correct answer
+
+    content.innerHTML = `
+        <h2 class="boss-completion-title">Weekly Challenge Complete!</h2>
+        <div class="boss-score">
+            <div class="boss-score-number">${score} / 5</div>
+            <div class="boss-score-label">Correct Answers</div>
+        </div>
+        <div class="boss-reward">
+            <div class="boss-reward-icon">⚡</div>
+            <div class="boss-reward-text">+${bonusXP} Bonus XP</div>
+            <div class="boss-badge">🏅 Weekly Champion</div>
+        </div>
+        <button id="boss-close-btn" class="boss-close-button">Claim Reward</button>
+    `;
+
+    // Add XP
+    gameState.totalXP += bonusXP;
+    gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
+
+    // Mark as completed this week
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem(STORAGE_KEYS.weeklyBossDate, today);
+
+    saveGameState();
+    updateProgressDisplay();
+
+    // Set up close button
+    const closeBtn = document.getElementById('boss-close-btn');
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        weeklyBossQuiz.isActive = false;
+        updateWeeklyBossButton();
+    });
 }
 
 // ============================================================
@@ -333,6 +685,9 @@ function awardXP(question) {
 
     // Check if node should be completed
     checkNodeCompletion();
+
+    // Check for achievements
+    checkAchievements();
 
     // Update UI
     updateProgressDisplay();
@@ -849,8 +1204,33 @@ function initializeApp() {
     // Update all UI elements
     updateProgressDisplay();
 
+    // Update achievements display
+    updateAchievementsDisplay();
+
+    // Update weekly boss button visibility
+    updateWeeklyBossButton();
+
     // Set up navigation
     initializeNavigation();
+
+    // Set up weekly boss button click handler
+    const weeklyBossBtn = document.getElementById('weekly-boss-button');
+    if (weeklyBossBtn) {
+        weeklyBossBtn.addEventListener('click', startWeeklyBoss);
+    }
+
+    // Set up achievements toggle
+    const achievementsToggle = document.getElementById('achievements-toggle');
+    const achievementsContent = document.getElementById('achievements-content');
+    if (achievementsToggle && achievementsContent) {
+        achievementsToggle.addEventListener('click', () => {
+            achievementsContent.classList.toggle('collapsed');
+            const icon = achievementsToggle.querySelector('.toggle-icon');
+            if (icon) {
+                icon.textContent = achievementsContent.classList.contains('collapsed') ? '▼' : '▲';
+            }
+        });
+    }
 
     console.log('App initialization complete');
 }
