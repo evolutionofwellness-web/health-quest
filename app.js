@@ -161,15 +161,53 @@ function animateXPIncrease() {
 // Initialize progress display on load
 updateProgressDisplay();
 
-// Add click event listeners to zone cards
+// Add click event listeners to zone cards for smooth scrolling to question sections
 zoneCards.forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+        e.preventDefault();
         const zoneName = card.dataset.zone;
         console.log(`Zone clicked: ${zoneName}`);
 
-        // Capitalize zone name to match data
-        selectedZone = zoneName.charAt(0).toUpperCase() + zoneName.slice(1);
-        showZoneQuestions(selectedZone);
+        // Scroll to the corresponding question section
+        const questionSection = document.getElementById(`${zoneName}-questions`);
+        if (questionSection) {
+            questionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Add highlight animation to the section heading
+            const heading = questionSection.querySelector('.zone-questions-title');
+            if (heading) {
+                heading.classList.add('highlight-flash');
+                setTimeout(() => {
+                    heading.classList.remove('highlight-flash');
+                }, 800);
+            }
+        }
+    });
+});
+
+// Add click handlers to "Back to Home" buttons
+const backToHomeButtons = document.querySelectorAll('.back-to-home-button');
+backToHomeButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Scroll back to the zone grid at the top
+        const homeView = document.querySelector('.home-view');
+        if (homeView) {
+            homeView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+
+// Add click handlers to question items in the new sections
+const questionItems = document.querySelectorAll('.zone-question-item');
+questionItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const questionId = item.dataset.questionId;
+        // Find the question in the QUESTIONS array
+        const question = QUESTIONS.find(q => q.id === questionId);
+        if (question) {
+            showQuestionView(question);
+        }
     });
 });
 
