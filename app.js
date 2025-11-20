@@ -12,7 +12,9 @@ let currentQuestion = null;
 // Game progress state with localStorage
 let gameState = {
     totalXP: 0,
-    answeredQuestions: [] // Array of question ids
+    answeredQuestions: [], // Array of question ids
+    streak: 0, // Daily streak counter
+    lastDate: null // Last date user answered a question (YYYY-MM-DD format)
 };
 
 // Load game state from localStorage
@@ -24,7 +26,7 @@ function loadGameState() {
             console.log('Game state loaded:', gameState);
         } catch (e) {
             console.error('Error loading game state:', e);
-            gameState = { totalXP: 0, answeredQuestions: [] };
+            gameState = { totalXP: 0, answeredQuestions: [], streak: 0, lastDate: null };
         }
     }
 }
@@ -36,6 +38,34 @@ function saveGameState() {
         console.log('Game state saved:', gameState);
     } catch (e) {
         console.error('Error saving game state:', e);
+    }
+}
+
+// Update daily streak based on the current date
+function updateStreak() {
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    if (!gameState.lastDate) {
+        // First time answering a question
+        gameState.streak = 1;
+        gameState.lastDate = today;
+    } else if (gameState.lastDate === today) {
+        // Already answered today, streak stays the same
+        return;
+    } else {
+        // Calculate days difference
+        const lastDate = new Date(gameState.lastDate);
+        const currentDate = new Date(today);
+        const daysDiff = Math.floor((currentDate - lastDate) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff === 1) {
+            // Exactly one day after, increase streak
+            gameState.streak += 1;
+        } else {
+            // More than one day, reset streak
+            gameState.streak = 1;
+        }
+        gameState.lastDate = today;
     }
 }
 
@@ -52,6 +82,12 @@ function updateProgressDisplay() {
     const xpElement = document.getElementById('total-xp');
     if (xpElement) {
         xpElement.textContent = gameState.totalXP;
+    }
+
+    // Update daily streak display
+    const streakElement = document.getElementById('daily-streak');
+    if (streakElement) {
+        streakElement.textContent = gameState.streak || 0;
     }
 
     // Update each zone card with completion count
@@ -250,6 +286,9 @@ function handleAnswerSelection(selectedIndex) {
     const isCorrect = selectedIndex === currentQuestion.correctIndex;
 
     if (isCorrect) {
+        // Update streak whenever a correct answer is given
+        updateStreak();
+
         // Award XP only if this question hasn't been answered before
         if (!gameState.answeredQuestions.includes(currentQuestion.id)) {
             gameState.totalXP += currentQuestion.xpReward;
@@ -261,7 +300,9 @@ function handleAnswerSelection(selectedIndex) {
             // Update UI to reflect new progress
             updateProgressDisplay();
         } else {
+            saveGameState(); // Save streak update even if question was already answered
             alert(`Correct! (Already completed)\n\n${currentQuestion.explanation}`);
+            updateProgressDisplay(); // Update to show new streak
         }
     } else {
         alert(`Incorrect. ✗\n\nThe correct answer was: "${currentQuestion.choices[currentQuestion.correctIndex]}"\n\n${currentQuestion.explanation}`);
