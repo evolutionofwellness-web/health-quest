@@ -43,11 +43,146 @@ body {
     color: #ff6b35;
 }
 
+/* Level Display */
+.level-display {
+    margin-top: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.level-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #FFD700;
+    white-space: nowrap;
+}
+
+.level-progress-bar {
+    flex: 1;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.level-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+.level-progress-text {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+}
+
 /* Home View */
 .home-view {
     padding: 1.5rem 1rem;
     max-width: 600px;
     margin: 0 auto;
+}
+
+/* World Strip Progress Bar */
+.world-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    overflow-x: auto;
+}
+
+.world-strip-icon {
+    flex: 1;
+    min-width: 60px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+
+.world-strip-icon.completed {
+    opacity: 1;
+    filter: grayscale(0%);
+    animation: glow 2s ease-in-out infinite;
+}
+
+.world-icon-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.world-strip-icon:hover .world-icon-container {
+    transform: translateY(-4px);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.world-icon {
+    font-size: 2rem;
+    display: block;
+}
+
+.world-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+}
+
+.world-strip-icon.completed .world-label {
+    color: #333;
+}
+
+/* Zone-specific glow animations */
+@keyframes glow {
+    0%, 100% {
+        filter: drop-shadow(0 0 3px currentColor);
+    }
+    50% {
+        filter: drop-shadow(0 0 8px currentColor);
+    }
+}
+
+.world-strip-icon[data-zone="sleep"].completed {
+    color: #203B73;
+}
+
+.world-strip-icon[data-zone="stress"].completed {
+    color: #8B5A7D;
+}
+
+.world-strip-icon[data-zone="nutrition"].completed {
+    color: #2D7A3E;
+}
+
+.world-strip-icon[data-zone="movement"].completed {
+    color: #E67E22;
+}
+
+.world-strip-icon[data-zone="hydration"].completed {
+    color: #3498DB;
+}
+
+.world-strip-icon[data-zone="mindset"].completed {
+    color: #F39C12;
 }
 
 /* Zone Grid */
@@ -95,6 +230,18 @@ body {
     font-weight: 600;
     color: #333;
     margin-bottom: 0.4rem;
+}
+
+.zone-badge {
+    font-size: 1.2rem;
+    margin-left: 0.3rem;
+    display: inline-block;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.zone-badge.visible {
+    opacity: 1;
 }
 
 .zone-progress {
@@ -237,6 +384,27 @@ body {
     font-size: 0.85rem;
     border-top: 1px solid #dee2e6;
     z-index: 100;
+}
+
+/* Today Summary Strip */
+.today-summary {
+    position: fixed;
+    bottom: 2.5rem;
+    left: 0;
+    width: 100%;
+    background-color: rgba(255, 215, 0, 0.95);
+    color: #333;
+    text-align: center;
+    padding: 0.9rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-top: 2px solid #FFA500;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 99;
+}
+
+#today-summary-text {
+    display: inline-block;
 }
 
 /* Zone Question Sections */
@@ -529,6 +697,24 @@ body {
 
 .xp-animate {
     animation: xpPulse 0.6s ease-in-out;
+}
+
+/* Level Up Animation */
+@keyframes levelUpPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+        text-shadow: 0 0 20px #FFD700;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.level-up-animate {
+    animation: levelUpPulse 1s ease-in-out;
 }
 
 /* Question View Styling */

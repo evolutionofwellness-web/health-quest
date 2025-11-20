@@ -1,5 +1,6 @@
 // Health Quest - Main Application Logic
 import { QUESTIONS } from './data.js';
+import { triggerConfetti } from './confetti.js';
 
 // ============================================================
 // LOCALSTORAGE KEYS & STATE
@@ -9,14 +10,22 @@ const STORAGE_KEYS = {
     completedQuestions: 'hq_completedQuestions',
     lastPlayDate: 'hq_lastPlayDate',
     streak: 'hq_streak',
-    hasSeenOnboarding: 'hasSeenOnboarding'
+    hasSeenOnboarding: 'hasSeenOnboarding',
+    todayHistory: 'hq_todayHistory'
 };
 
 let gameState = {
     totalXP: 0,
     completedQuestions: [],
     lastPlayDate: null,
-    streak: 0
+    streak: 0,
+    currentLevel: 1
+};
+
+// Track today's progress
+let todayProgress = {
+    tilesCompleted: 0,
+    xpEarned: 0
 };
 
 // ============================================================
@@ -31,6 +40,12 @@ function loadGameState() {
     gameState.lastPlayDate = localStorage.getItem(STORAGE_KEYS.lastPlayDate) || null;
     gameState.streak = parseInt(localStorage.getItem(STORAGE_KEYS.streak)) || 0;
 
+    // Calculate current level
+    gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
+
+    // Load today's progress
+    loadTodayProgress();
+
     console.log('Game state loaded:', gameState);
 }
 
@@ -41,7 +56,40 @@ function saveGameState() {
     localStorage.setItem(STORAGE_KEYS.lastPlayDate, gameState.lastPlayDate || '');
     localStorage.setItem(STORAGE_KEYS.streak, gameState.streak.toString());
 
+    // Save today's progress
+    saveTodayProgress();
+
     console.log('Game state saved:', gameState);
+}
+
+// ============================================================
+// TODAY'S PROGRESS TRACKING
+// ============================================================
+function loadTodayProgress() {
+    const today = new Date().toISOString().split('T')[0];
+    const savedHistory = localStorage.getItem(STORAGE_KEYS.todayHistory);
+
+    if (savedHistory) {
+        try {
+            const history = JSON.parse(savedHistory);
+            if (history.date === today) {
+                todayProgress = history;
+            } else {
+                // Reset for new day
+                todayProgress = { date: today, tilesCompleted: 0, xpEarned: 0 };
+            }
+        } catch (e) {
+            todayProgress = { date: today, tilesCompleted: 0, xpEarned: 0 };
+        }
+    } else {
+        todayProgress = { date: today, tilesCompleted: 0, xpEarned: 0 };
+    }
+}
+
+function saveTodayProgress() {
+    const today = new Date().toISOString().split('T')[0];
+    todayProgress.date = today;
+    localStorage.setItem(STORAGE_KEYS.todayHistory, JSON.stringify(todayProgress));
 }
 
 // ============================================================
@@ -84,9 +132,19 @@ function awardXP(question) {
         return false;
     }
 
+    // Store previous level to detect level-up
+    const previousLevel = gameState.currentLevel;
+
     // First time completing - award XP
     gameState.completedQuestions.push(question.id);
     gameState.totalXP += question.xpValue;
+
+    // Update current level
+    gameState.currentLevel = Math.floor(gameState.totalXP / 100) + 1;
+
+    // Update today's progress
+    todayProgress.tilesCompleted += 1;
+    todayProgress.xpEarned += question.xpValue;
 
     // Update streak
     updateStreak();
@@ -98,7 +156,26 @@ function awardXP(question) {
     updateProgressDisplay();
     animateXPIncrease();
 
+    // Check for level-up
+    if (gameState.currentLevel > previousLevel) {
+        triggerLevelUp();
+    }
+
     return true;
+}
+
+function triggerLevelUp() {
+    console.log('Level up!', gameState.currentLevel);
+    triggerConfetti();
+
+    // Optional: Add a visual notification
+    const levelLabel = document.getElementById('level-label');
+    if (levelLabel) {
+        levelLabel.classList.add('level-up-animate');
+        setTimeout(() => {
+            levelLabel.classList.remove('level-up-animate');
+        }, 1000);
+    }
 }
 
 // ============================================================
@@ -111,11 +188,20 @@ function updateProgressDisplay() {
         xpElement.textContent = gameState.totalXP;
     }
 
+    // Update level display
+    updateLevelDisplay();
+
     // Update daily streak display
     const streakElement = document.getElementById('daily-streak');
     if (streakElement) {
         streakElement.textContent = gameState.streak || 0;
     }
+
+    // Update today's summary
+    updateTodaySummary();
+
+    // Update world strip
+    updateWorldStrip();
 
     // Update each zone card with completion count
     const zoneCards = document.querySelectorAll('.zone-card');
@@ -131,6 +217,67 @@ function updateProgressDisplay() {
         const progressElement = card.querySelector('.zone-progress');
         if (progressElement) {
             progressElement.textContent = `${completedCount} / ${totalCount} tiles completed`;
+        }
+
+        // Update completion badge
+        const badge = card.querySelector('.zone-badge');
+        if (badge) {
+            if (completedCount === totalCount && totalCount > 0) {
+                badge.textContent = '⭐';
+                badge.classList.add('visible');
+            } else {
+                badge.textContent = '';
+                badge.classList.remove('visible');
+            }
+        }
+    });
+}
+
+function updateLevelDisplay() {
+    const level = gameState.currentLevel;
+    const progressInLevel = gameState.totalXP % 100;
+
+    // Update level label
+    const levelLabel = document.getElementById('level-label');
+    if (levelLabel) {
+        levelLabel.textContent = `Level ${level}`;
+    }
+
+    // Update progress bar
+    const progressFill = document.getElementById('level-progress-fill');
+    if (progressFill) {
+        progressFill.style.width = `${progressInLevel}%`;
+    }
+
+    // Update progress text
+    const progressText = document.getElementById('level-progress-text');
+    if (progressText) {
+        progressText.textContent = `(${progressInLevel}/100 XP)`;
+    }
+}
+
+function updateTodaySummary() {
+    const summaryText = document.getElementById('today-summary-text');
+    if (summaryText) {
+        summaryText.textContent = `Today: ${todayProgress.tilesCompleted} tiles completed · +${todayProgress.xpEarned} XP`;
+    }
+}
+
+function updateWorldStrip() {
+    const zones = ['sleep', 'stress', 'nutrition', 'movement', 'hydration', 'mindset'];
+
+    zones.forEach(zoneName => {
+        const zoneQuestions = QUESTIONS[zoneName] || [];
+        const completedCount = zoneQuestions.filter(q => gameState.completedQuestions.includes(q.id)).length;
+        const totalCount = zoneQuestions.length;
+
+        const worldIcon = document.querySelector(`.world-strip-icon[data-zone="${zoneName}"]`);
+        if (worldIcon) {
+            if (completedCount === totalCount && totalCount > 0) {
+                worldIcon.classList.add('completed');
+            } else {
+                worldIcon.classList.remove('completed');
+            }
         }
     });
 }
@@ -312,21 +459,17 @@ function initializeNavigation() {
         card.addEventListener('click', (e) => {
             e.preventDefault();
             const zoneName = card.dataset.zone;
-            console.log(`Zone clicked: ${zoneName}`);
+            scrollToZone(zoneName);
+        });
+    });
 
-            const questionSection = document.getElementById(`${zoneName}-questions`);
-            if (questionSection) {
-                questionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-                // Add highlight animation
-                const heading = questionSection.querySelector('.zone-questions-title');
-                if (heading) {
-                    heading.classList.add('highlight-flash');
-                    setTimeout(() => {
-                        heading.classList.remove('highlight-flash');
-                    }, 800);
-                }
-            }
+    // World strip icons - scroll to zone
+    const worldStripIcons = document.querySelectorAll('.world-strip-icon');
+    worldStripIcons.forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.preventDefault();
+            const zoneName = icon.dataset.zone;
+            scrollToZone(zoneName);
         });
     });
 
@@ -352,6 +495,24 @@ function initializeNavigation() {
     const modalBackdrop = document.querySelector('.modal-backdrop');
     if (modalBackdrop) {
         modalBackdrop.addEventListener('click', closeQuestionModal);
+    }
+}
+
+function scrollToZone(zoneName) {
+    console.log(`Scrolling to zone: ${zoneName}`);
+
+    const questionSection = document.getElementById(`${zoneName}-questions`);
+    if (questionSection) {
+        questionSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Add highlight animation
+        const heading = questionSection.querySelector('.zone-questions-title');
+        if (heading) {
+            heading.classList.add('highlight-flash');
+            setTimeout(() => {
+                heading.classList.remove('highlight-flash');
+            }, 800);
+        }
     }
 }
 

@@ -24,48 +24,112 @@
     <header class="top-bar">
         <h1 class="app-title">Health Quest</h1>
         <div class="xp-display">Total XP: <span id="total-xp">0</span></div>
+        <div class="level-display">
+            <span class="level-label" id="level-label">Level 1</span>
+            <div class="level-progress-bar">
+                <div class="level-progress-fill" id="level-progress-fill"></div>
+            </div>
+            <span class="level-progress-text" id="level-progress-text">(0/100 XP)</span>
+        </div>
         <div class="streak-display">Daily streak: <span id="daily-streak">0</span> days</div>
     </header>
 
     <main class="home-view">
+        <!-- World Strip Progress Bar -->
+        <div class="world-strip">
+            <div class="world-strip-icon" data-zone="sleep">
+                <div class="world-icon-container">
+                    <span class="world-icon">🌙</span>
+                    <span class="world-label">Sleep</span>
+                </div>
+            </div>
+            <div class="world-strip-icon" data-zone="stress">
+                <div class="world-icon-container">
+                    <span class="world-icon">🧗‍♂️</span>
+                    <span class="world-label">Stress</span>
+                </div>
+            </div>
+            <div class="world-strip-icon" data-zone="nutrition">
+                <div class="world-icon-container">
+                    <span class="world-icon">🌲</span>
+                    <span class="world-label">Nutrition</span>
+                </div>
+            </div>
+            <div class="world-strip-icon" data-zone="movement">
+                <div class="world-icon-container">
+                    <span class="world-icon">🏃</span>
+                    <span class="world-label">Movement</span>
+                </div>
+            </div>
+            <div class="world-strip-icon" data-zone="hydration">
+                <div class="world-icon-container">
+                    <span class="world-icon">💧</span>
+                    <span class="world-label">Hydration</span>
+                </div>
+            </div>
+            <div class="world-strip-icon" data-zone="mindset">
+                <div class="world-icon-container">
+                    <span class="world-icon">🧠</span>
+                    <span class="world-label">Mindset</span>
+                </div>
+            </div>
+        </div>
+
         <div class="zone-grid">
             <div class="zone-card" data-zone="sleep">
                 <div class="zone-icon">🌙</div>
-                <h2 class="zone-name">Sleep</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Sleep <span class="zone-badge" data-zone="sleep"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
 
             <div class="zone-card" data-zone="stress">
                 <div class="zone-icon">🧗‍♂️</div>
-                <h2 class="zone-name">Stress</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Stress <span class="zone-badge" data-zone="stress"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
 
             <div class="zone-card" data-zone="nutrition">
                 <div class="zone-icon">🌲</div>
-                <h2 class="zone-name">Nutrition</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Nutrition <span class="zone-badge" data-zone="nutrition"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
 
             <div class="zone-card" data-zone="movement">
                 <div class="zone-icon">🏃</div>
-                <h2 class="zone-name">Movement</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Movement <span class="zone-badge" data-zone="movement"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
 
             <div class="zone-card" data-zone="hydration">
                 <div class="zone-icon">💧</div>
-                <h2 class="zone-name">Hydration</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Hydration <span class="zone-badge" data-zone="hydration"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
 
             <div class="zone-card" data-zone="mindset">
                 <div class="zone-icon">🧠</div>
-                <h2 class="zone-name">Mindset</h2>
-                <p class="zone-progress">0 tiles completed</p>
+                <div class="zone-card-content">
+                    <h2 class="zone-name">Mindset <span class="zone-badge" data-zone="mindset"></span></h2>
+                    <p class="zone-progress">0 tiles completed</p>
+                </div>
             </div>
         </div>
     </main>
+
+    <!-- Today Summary Strip -->
+    <div class="today-summary">
+        <span id="today-summary-text">Today: 0 tiles completed · +0 XP</span>
+    </div>
 
     <!-- Question Sections for Each Zone -->
     <section id="sleep-questions" class="zone-questions-section">
@@ -132,6 +196,7 @@
     </footer>
 
     <script type="module" src="data.js"></script>
+    <script type="module" src="confetti.js"></script>
     <script type="module" src="app.js"></script>
 </body>
 </html>
