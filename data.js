@@ -6,6 +6,7 @@ const QUESTIONS = {
         {
             id: 'sleep-1',
             zone: 'sleep',
+            difficulty: 'basic',
             text: 'What is the recommended amount of sleep for most adults?',
             options: ['5-6 hours', '7-9 hours', '10-12 hours', '4-5 hours'],
             correctIndex: 1,
@@ -15,6 +16,7 @@ const QUESTIONS = {
         {
             id: 'sleep-2',
             zone: 'sleep',
+            difficulty: 'core',
             text: 'Which of these activities helps improve sleep quality?',
             options: ['Using phone in bed', 'Keeping room cool', 'Drinking coffee at night', 'Eating heavy meals before bed'],
             correctIndex: 1,
@@ -24,6 +26,7 @@ const QUESTIONS = {
         {
             id: 'sleep-3',
             zone: 'sleep',
+            difficulty: 'challenge',
             text: 'What is sleep debt?',
             options: ['Money owed to a sleep clinic', 'The cumulative effect of not getting enough sleep', 'A type of sleeping disorder', 'The time it takes to fall asleep'],
             correctIndex: 1,
@@ -35,6 +38,7 @@ const QUESTIONS = {
         {
             id: 'stress-1',
             zone: 'stress',
+            difficulty: 'basic',
             text: 'Which breathing technique is most effective for reducing immediate stress?',
             options: ['Rapid shallow breathing', 'Deep belly breathing', 'Holding your breath', 'Breathing only through mouth'],
             correctIndex: 1,
@@ -44,6 +48,7 @@ const QUESTIONS = {
         {
             id: 'stress-2',
             zone: 'stress',
+            difficulty: 'core',
             text: 'What is the "fight or flight" response?',
             options: ['A travel decision', 'The body\'s automatic stress reaction', 'A type of exercise', 'A mental health condition'],
             correctIndex: 1,
@@ -53,6 +58,7 @@ const QUESTIONS = {
         {
             id: 'stress-3',
             zone: 'stress',
+            difficulty: 'challenge',
             text: 'Which activity is proven to reduce stress levels?',
             options: ['Skipping meals', 'Regular exercise', 'Avoiding sleep', 'Staying indoors always'],
             correctIndex: 1,
@@ -64,6 +70,7 @@ const QUESTIONS = {
         {
             id: 'nutrition-1',
             zone: 'nutrition',
+            difficulty: 'basic',
             text: 'What are macronutrients?',
             options: ['Large vitamins', 'Carbohydrates, proteins, and fats', 'Food additives', 'Artificial sweeteners'],
             correctIndex: 1,
@@ -73,6 +80,7 @@ const QUESTIONS = {
         {
             id: 'nutrition-2',
             zone: 'nutrition',
+            difficulty: 'core',
             text: 'Why is fiber important in your diet?',
             options: ['It makes food taste better', 'It supports digestive health', 'It increases sugar absorption', 'It prevents all diseases'],
             correctIndex: 1,
@@ -82,6 +90,7 @@ const QUESTIONS = {
         {
             id: 'nutrition-3',
             zone: 'nutrition',
+            difficulty: 'challenge',
             text: 'What is a balanced plate?',
             options: ['All carbohydrates', 'Half vegetables, quarter protein, quarter grains', 'Only fruits', 'Mostly processed foods'],
             correctIndex: 1,
@@ -93,6 +102,7 @@ const QUESTIONS = {
         {
             id: 'movement-1',
             zone: 'movement',
+            difficulty: 'basic',
             text: 'How much moderate exercise do adults need per week?',
             options: ['30 minutes total', '150 minutes', '500 minutes', 'No specific amount'],
             correctIndex: 1,
@@ -102,6 +112,7 @@ const QUESTIONS = {
         {
             id: 'movement-2',
             zone: 'movement',
+            difficulty: 'core',
             text: 'What is the benefit of strength training?',
             options: ['Only builds large muscles', 'Improves bone density and metabolism', 'Makes you gain weight', 'Reduces flexibility'],
             correctIndex: 1,
@@ -111,6 +122,7 @@ const QUESTIONS = {
         {
             id: 'movement-3',
             zone: 'movement',
+            difficulty: 'challenge',
             text: 'Why is stretching important?',
             options: ['It burns calories', 'It improves flexibility and reduces injury risk', 'It builds muscle mass', 'It replaces cardio exercise'],
             correctIndex: 1,
@@ -122,6 +134,7 @@ const QUESTIONS = {
         {
             id: 'hydration-1',
             zone: 'hydration',
+            difficulty: 'basic',
             text: 'What percentage of the human body is water?',
             options: ['30%', '45%', '60%', '80%'],
             correctIndex: 2,
@@ -131,6 +144,7 @@ const QUESTIONS = {
         {
             id: 'hydration-2',
             zone: 'hydration',
+            difficulty: 'core',
             text: 'Which is a sign of dehydration?',
             options: ['Clear urine', 'Dark yellow urine', 'Excessive energy', 'Improved focus'],
             correctIndex: 1,
@@ -140,6 +154,7 @@ const QUESTIONS = {
         {
             id: 'hydration-3',
             zone: 'hydration',
+            difficulty: 'challenge',
             text: 'When should you drink water?',
             options: ['Only when very thirsty', 'Throughout the day', 'Only at meals', 'Only after exercise'],
             correctIndex: 1,
@@ -151,6 +166,7 @@ const QUESTIONS = {
         {
             id: 'mindset-1',
             zone: 'mindset',
+            difficulty: 'basic',
             text: 'What is a growth mindset?',
             options: ['Believing abilities can be developed', 'Thinking you know everything', 'Avoiding challenges', 'Giving up easily'],
             correctIndex: 0,
@@ -160,6 +176,7 @@ const QUESTIONS = {
         {
             id: 'mindset-2',
             zone: 'mindset',
+            difficulty: 'core',
             text: 'What is mindfulness?',
             options: ['Never thinking', 'Being present in the moment', 'Constant worrying', 'Multitasking'],
             correctIndex: 1,
@@ -169,6 +186,7 @@ const QUESTIONS = {
         {
             id: 'mindset-3',
             zone: 'mindset',
+            difficulty: 'challenge',
             text: 'Why is gratitude practice beneficial?',
             options: ['It makes problems disappear', 'It improves mental well-being and perspective', 'It prevents all negative emotions', 'It requires no effort'],
             correctIndex: 1,
