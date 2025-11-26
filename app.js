@@ -1050,7 +1050,7 @@ function renderQuestionTiles() {
             // Build tile HTML
             tile.innerHTML = `
                 <div class="question-tile-header">
-                    <span class="question-number">${difficultyEmoji[question.difficulty] || ''} Question ${dailyQuest.tiles.indexOf(question.id) + 1}</span>
+                    <span class="question-number">${difficultyEmoji[question.difficulty] || ''} Question ${index + 1}</span>
                     <span class="question-xp">${isCompleted ? 'Completed' : `XP +${question.xpValue}`}</span>
                 </div>
                 <div class="question-preview">${question.text}</div>
